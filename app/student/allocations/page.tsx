@@ -1,0 +1,174 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useApp } from '../../../context/AppContext';
+import { GraduationCap, ArrowLeft, BookOpen } from 'lucide-react';
+
+export default function StudentAllocations() {
+  const { state } = useApp();
+  const router = useRouter();
+  const [allocations, setAllocations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!state.user || state.user.role !== 'student') {
+      router.push('/login');
+      return;
+    }
+
+    fetchAllocations();
+  }, [state.user, router]);
+
+  const fetchAllocations = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/allocations');
+      if (response.ok) {
+        const data = await response.json();
+        // Filter to show only this student's allocations
+        const studentAllocations = data.filter((allocation: any) =>
+          allocation.studentId?._id === state.user?._id
+        );
+        setAllocations(studentAllocations);
+      } else {
+        console.error('Failed to fetch allocations');
+        setAllocations([]);
+      }
+    } catch (error) {
+      console.error('Error fetching allocations:', error);
+      setAllocations([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [state.user?.id]);
+
+  useEffect(() => {
+    if (!state.user || state.user.role !== 'student') {
+      router.push('/login');
+      return;
+    }
+
+    fetchAllocations();
+  }, [state.user, router, fetchAllocations]);
+
+  if (!state.user || state.user.role !== 'student') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-white shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <Link href="/dashboard" className="flex items-center text-indigo-600 hover:text-indigo-700">
+                <ArrowLeft className="h-5 w-5 mr-1" />
+                Back to Dashboard
+              </Link>
+            </div>
+            <div className="flex items-center">
+              <GraduationCap className="h-8 w-8 text-indigo-600" />
+              <span className="ml-2 text-xl font-bold text-gray-900">
+                My Project
+              </span>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-gray-700">Student: {state.user.name}</span>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Project Allocation</h1>
+            <p className="text-gray-600">View your assigned project and supervisor details</p>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
+            </div>
+          ) : allocations.length === 0 ? (
+            <div className="bg-white shadow rounded-lg p-8 text-center">
+              <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 text-lg">No project assigned yet</p>
+              <p className="text-gray-500 mt-2">You will be assigned to a project soon. Check back later.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {allocations.map((allocation: any) => (
+                <div key={allocation._id} className="bg-white shadow rounded-lg p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                        {allocation.projectId?.title || 'Project Title Not Available'}
+                      </h3>
+                      <p className="text-gray-600 mb-4">
+                        {allocation.projectId?.description || 'Project description not available.'}
+                      </p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <h4 className="font-semibold text-gray-900 mb-2">Supervisor Details</h4>
+                          <div className="space-y-1 text-sm">
+                            <p><span className="font-medium">Name:</span> {allocation.supervisorId?.name || 'Not assigned'}</p>
+                            <p><span className="font-medium">Department:</span> {allocation.projectId?.department || 'N/A'}</p>
+                            <p><span className="font-medium">Contact:</span> Contact your supervisor for guidance</p>
+                          </div>
+                        </div>
+
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <h4 className="font-semibold text-gray-900 mb-2">Project Information</h4>
+                          <div className="space-y-1 text-sm">
+                            <p><span className="font-medium">Status:</span>
+                              <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs ml-2">
+                                Active
+                              </span>
+                            </p>
+                            <p><span className="font-medium">Start Date:</span> {new Date(allocation.createdAt).toLocaleDateString()}</p>
+                            <p><span className="font-medium">Duration:</span> Check with your supervisor</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-gray-500">
+                        Allocated on: {new Date(allocation.createdAt).toLocaleDateString()}
+                      </div>
+                      <div className="flex space-x-3">
+                        <Link
+                          href="/progress"
+                          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors text-sm"
+                        >
+                          Submit Progress Report
+                        </Link>
+                        <Link
+                          href={`/student/projects/${allocation.projectId?._id}`}
+                          className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors text-sm"
+                        >
+                          View Project Details
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

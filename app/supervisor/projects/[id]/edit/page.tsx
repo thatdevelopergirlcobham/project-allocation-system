@@ -1,0 +1,322 @@
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useApp } from '../../../../context/AppContext';
+import { useToast } from '../../../../components/Toast';
+import type { Project } from '../../../../types';
+import { GraduationCap, ArrowLeft, Save, Trash2 } from 'lucide-react';
+
+export default function SupervisorEditProject({ params }: { params: { id: string } }) {
+  const { state } = useApp();
+  const router = useRouter();
+  const { addToast } = useToast();
+  const [project, setProject] = useState<Project | null>(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    department: '',
+    maxStudents: 1,
+    requirements: ''
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!state.user || state.user.role !== 'supervisor') {
+      router.push('/login');
+      return;
+    }
+
+    fetchProject();
+  }, [state.user, router]);
+
+  const fetchProject = async () => {
+    try {
+      const response = await fetch(`/api/projects/${params.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setProject(data);
+        setFormData({
+          title: data.title || '',
+          description: data.description || '',
+          department: data.department || '',
+          maxStudents: data.maxStudents || 1,
+          requirements: data.requirements || ''
+        });
+      } else {
+        addToast({
+          type: 'error',
+          title: 'Project not found',
+          message: 'The requested project could not be found'
+        });
+        router.push('/supervisor/projects');
+      }
+    } catch (error) {
+      console.error('Error fetching project:', error);
+      addToast({
+        type: 'error',
+        title: 'Error loading project',
+        message: 'Failed to load project data'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+
+    try {
+      const response = await fetch(`/api/projects/${params.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        addToast({
+          type: 'success',
+          title: 'Project updated successfully',
+          message: 'Your project has been updated'
+        });
+        router.push('/supervisor/projects');
+      } else {
+        addToast({
+          type: 'error',
+          title: 'Failed to update project',
+          message: 'Please try again'
+        });
+      }
+    } catch (error) {
+      console.error('Error updating project:', error);
+      addToast({
+        type: 'error',
+        title: 'Update failed',
+        message: 'An error occurred while updating the project'
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/projects/${params.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        addToast({
+          type: 'success',
+          title: 'Project deleted successfully',
+          message: 'The project has been permanently deleted'
+        });
+        router.push('/supervisor/projects');
+      } else {
+        addToast({
+          type: 'error',
+          title: 'Failed to delete project',
+          message: 'Please try again'
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      addToast({
+        type: 'error',
+        title: 'Delete failed',
+        message: 'An error occurred while deleting the project'
+      });
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === 'number' ? parseInt(value) || 1 : value
+    });
+  };
+
+  if (!state.user || state.user.role !== 'supervisor') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading project data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-white shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <Link href="/supervisor/projects" className="flex items-center text-indigo-600 hover:text-indigo-700">
+                <ArrowLeft className="h-5 w-5 mr-1" />
+                Back to Projects
+              </Link>
+            </div>
+            <div className="flex items-center">
+              <GraduationCap className="h-8 w-8 text-indigo-600" />
+              <span className="ml-2 text-xl font-bold text-gray-900">
+                Edit Project
+              </span>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={handleDelete}
+                className="flex items-center bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+              >
+                <Trash2 className="h-5 w-5 mr-1" />
+                Delete Project
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Project</h1>
+            <p className="text-gray-600">Update your project information</p>
+          </div>
+
+          <div className="bg-white shadow rounded-lg p-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                  Project Title *
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  name="title"
+                  required
+                  value={formData.title}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Enter project title"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                  Description *
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  required
+                  rows={4}
+                  value={formData.description}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Describe your project..."
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-1">
+                    Department *
+                  </label>
+                  <select
+                    id="department"
+                    name="department"
+                    required
+                    value={formData.department}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="">Select Department</option>
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="Software Engineering">Software Engineering</option>
+                    <option value="Information Technology">Information Technology</option>
+                    <option value="Data Science">Data Science</option>
+                    <option value="Cybersecurity">Cybersecurity</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Physics">Physics</option>
+                    <option value="Chemistry">Chemistry</option>
+                    <option value="Biology">Biology</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="maxStudents" className="block text-sm font-medium text-gray-700 mb-1">
+                    Maximum Students *
+                  </label>
+                  <input
+                    type="number"
+                    id="maxStudents"
+                    name="maxStudents"
+                    required
+                    min="1"
+                    max="10"
+                    value={formData.maxStudents}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="requirements" className="block text-sm font-medium text-gray-700 mb-1">
+                  Requirements
+                </label>
+                <textarea
+                  id="requirements"
+                  name="requirements"
+                  rows={3}
+                  value={formData.requirements}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="List any specific requirements or skills needed..."
+                />
+              </div>
+
+              <div className="flex space-x-4">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex items-center bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-60"
+                >
+                  <Save className="h-5 w-5 mr-2" />
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+                <Link
+                  href="/supervisor/projects"
+                  className="flex items-center bg-gray-300 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-400 transition-colors"
+                >
+                  Cancel
+                </Link>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -134,7 +134,7 @@ export default function SupervisorProjects() {
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-gray-500">
-                      Created: {new Date(project.createdAt).toLocaleDateString()}
+                      Created: {project.createdAt ? new Date(project.createdAt).toLocaleDateString() : 'Unknown'}
                     </div>
                     <div className="flex space-x-2">
                       <Link

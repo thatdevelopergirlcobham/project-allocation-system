@@ -61,42 +61,6 @@ export default function SupervisorProgress() {
     fetchSupervisorData();
   }, [state.user, router, fetchSupervisorData]);
 
-  const fetchSupervisorData = useCallback(async () => {
-    setLoading(true);
-    try {
-      // Fetch supervisor's projects
-      const projectsResponse = await fetch(`/api/projects?supervisorId=${state.user?._id}`);
-      if (projectsResponse.ok) {
-        const projectsData = await projectsResponse.json();
-        
-        // Get project IDs for filtering progress reports
-        const projectIds = projectsData.map((project: Project) => project._id);
-        
-        // Fetch progress reports for supervisor's projects
-        const progressResponse = await fetch('/api/progress');
-        if (progressResponse.ok) {
-          const allReports = await progressResponse.json();
-          // Filter reports to only include those for the supervisor's projects
-          const filteredReports = allReports.filter((report: ProgressReport) => 
-            projectIds.includes(report.projectId?._id)
-          );
-          setProgressReports(filteredReports);
-        } else {
-          console.error('Failed to fetch progress reports');
-          setProgressReports([]);
-        }
-      } else {
-        console.error('Failed to fetch supervisor projects');
-        setProgressReports([]);
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      setProgressReports([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [state.user?._id]);
-
 
   if (!state.user || state.user.role !== 'supervisor') {
     return (
@@ -157,10 +121,10 @@ export default function SupervisorProgress() {
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">
-                        Student: {report.studentId?.name || 'Unknown Student'}
+                        Student: {typeof report.studentId === 'object' && report.studentId?.name ? report.studentId.name : 'Unknown Student'}
                       </h3>
                       <p className="text-gray-600">
-                        Project: {report.projectId?.title || 'Unknown Project'}
+                        Project: {typeof report.projectId === 'object' && report.projectId?.title ? report.projectId.title : 'Unknown Project'}
                       </p>
                       <p className="text-sm text-gray-500">
                         Submitted: {new Date(report.submissionDate).toLocaleDateString()}

@@ -1,6 +1,6 @@
+'use client';
+
 import { useState, useEffect } from 'react';
-import dbConnect from '../lib/dbConnect';
-import Student from '../models/Student';
 
 export function useStudents() {
   const [students, setStudents] = useState([]);
@@ -10,8 +10,11 @@ export function useStudents() {
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      await dbConnect();
-      const studentsData = await Student.find({}).populate('assignedProject');
+      const response = await fetch('/api/students');
+      if (!response.ok) {
+        throw new Error('Failed to fetch students');
+      }
+      const studentsData = await response.json();
       setStudents(studentsData || []);
       setError(null);
     } catch (err) {
@@ -24,10 +27,22 @@ export function useStudents() {
 
   const createStudent = async (studentData) => {
     try {
-      await dbConnect();
-      const newStudent = await Student.create(studentData);
-      setStudents([...students, newStudent]);
-      return newStudent;
+      const response = await fetch('/api/students', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(studentData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create student');
+      }
+      
+      const data = await response.json();
+      setStudents([...students, data.student]);
+      return data.student;
     } catch (err) {
       setError(err.message);
       throw err;
@@ -36,8 +51,20 @@ export function useStudents() {
 
   const updateStudent = async (id, studentData) => {
     try {
-      await dbConnect();
-      const updatedStudent = await Student.findByIdAndUpdate(id, studentData, { new: true });
+      const response = await fetch(`/api/students/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(studentData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update student');
+      }
+      
+      const updatedStudent = await response.json();
       setStudents(students.map(student =>
         student._id === id ? updatedStudent : student
       ));
@@ -50,8 +77,15 @@ export function useStudents() {
 
   const deleteStudent = async (id) => {
     try {
-      await dbConnect();
-      await Student.findByIdAndDelete(id);
+      const response = await fetch(`/api/students/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete student');
+      }
+      
       setStudents(students.filter(student => student._id !== id));
     } catch (err) {
       setError(err.message);

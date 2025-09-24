@@ -44,7 +44,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Return user data without password
-    const userResponse = user.toObject();
+    let userResponse;
+    
+    // Handle both mongoose models and our mock models
+    if (typeof user.toObject === 'function') {
+      userResponse = user.toObject();
+    } else {
+      // For mock database
+      userResponse = { ...user };
+    }
+    
     delete userResponse.password;
 
     return NextResponse.json({
@@ -54,8 +63,16 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Login error:', error);
+    
+    // Create a more helpful error message
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error', 
+        details: errorMessage,
+        mockDb: process.env.USE_MOCK_DB === 'true' ? 'Using mock database' : 'Using real database'
+      },
       { status: 500 }
     );
   }

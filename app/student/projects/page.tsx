@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useApp } from '../../../context/AppContext';
-import { Project } from '../../../types';
+import { Project, Supervisor } from '../../../types';
 import { GraduationCap, ArrowLeft, BookOpen, User, Calendar } from 'lucide-react';
 
 export default function StudentProjects() {
@@ -30,7 +30,14 @@ export default function StudentProjects() {
           _id: '1',
           title: 'AI-Powered Healthcare System',
           description: 'Develop an AI system for medical diagnosis assistance using machine learning algorithms.',
-          supervisor: 'Dr. Jane Smith',
+          supervisorId: { 
+            name: 'Dr. Jane Smith', 
+            _id: 's1', 
+            email: 'jane.smith@example.com', 
+            department: 'Computer Science', 
+            projectsCount: 5,
+            specialization: 'AI and Machine Learning'
+          } as Supervisor,
           department: 'Computer Science',
           duration: '6 months',
           requirements: 'Python, Machine Learning, Healthcare domain knowledge',
@@ -43,7 +50,14 @@ export default function StudentProjects() {
           _id: '2',
           title: 'Sustainable Energy Optimization',
           description: 'Research and develop algorithms for optimizing renewable energy distribution in smart grids.',
-          supervisor: 'Prof. Michael Johnson',
+          supervisorId: { 
+            name: 'Prof. Michael Johnson', 
+            _id: 's2', 
+            email: 'michael.johnson@example.com', 
+            department: 'Engineering', 
+            projectsCount: 3,
+            specialization: 'Energy Systems'
+          } as Supervisor,
           department: 'Engineering',
           duration: '8 months',
           requirements: 'Mathematics, Programming, Energy systems knowledge',
@@ -56,7 +70,14 @@ export default function StudentProjects() {
           _id: '3',
           title: 'Blockchain Security Analysis',
           description: 'Analyze security vulnerabilities in blockchain networks and develop mitigation strategies.',
-          supervisor: 'Dr. Sarah Wilson',
+          supervisorId: { 
+            name: 'Dr. Sarah Wilson', 
+            _id: 's3', 
+            email: 'sarah.wilson@example.com', 
+            department: 'Cybersecurity', 
+            projectsCount: 2,
+            specialization: 'Blockchain Security'
+          } as Supervisor,
           department: 'Cybersecurity',
           duration: '5 months',
           requirements: 'Cryptography, Network Security, Programming',
@@ -165,7 +186,7 @@ export default function StudentProjects() {
                             <User className="h-4 w-4 mr-2" />
                             Supervisor
                           </h4>
-                          <p className="text-sm text-gray-600">{project.supervisor}</p>
+                          <p className="text-sm text-gray-600">{typeof project.supervisorId === 'object' ? project.supervisorId.name : 'Unknown'}</p>
                         </div>
 
                         <div className="bg-blue-50 p-4 rounded-lg">

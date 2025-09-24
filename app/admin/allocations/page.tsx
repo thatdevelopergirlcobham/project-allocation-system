@@ -115,29 +115,29 @@ export default function AdminAllocations() {
                           <div className="flex-shrink-0 h-10 w-10">
                             <div className="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center">
                               <span className="text-white font-medium">
-                                {allocation.studentId?.name?.charAt(0) || 'U'}
+                                {typeof allocation.studentId === 'object' && allocation.studentId?.name ? allocation.studentId.name.charAt(0) : 'U'}
                               </span>
                             </div>
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">
-                              {allocation.studentId?.name || 'Unknown Student'}
+                              {typeof allocation.studentId === 'object' && allocation.studentId?.name ? allocation.studentId.name : 'Unknown Student'}
                             </div>
                             <div className="text-sm text-gray-500">
-                              {allocation.studentId?.email || 'Unknown Email'}
+                              {typeof allocation.studentId === 'object' && allocation.studentId?.email ? allocation.studentId.email : 'Unknown Email'}
                             </div>
                             <div className="text-sm text-gray-500">
-                              Project: {allocation.projectId?.title || 'Unknown Project'}
+                              Project: {typeof allocation.projectId === 'object' && allocation.projectId?.title ? allocation.projectId.title : 'Unknown Project'}
                             </div>
                             <div className="text-sm text-gray-500">
-                              Supervisor: {allocation.supervisorId?.name || 'Unknown Supervisor'}
+                              Supervisor: {typeof allocation.supervisorId === 'object' && allocation.supervisorId?.name ? allocation.supervisorId.name : 'Unknown Supervisor'}
                             </div>
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-4">
                         <div className="text-sm text-gray-500">
-                          Allocated: {new Date(allocation.createdAt).toLocaleDateString()}
+                          Allocated: {allocation.createdAt ? new Date(allocation.createdAt).toLocaleDateString() : 'Unknown date'}
                         </div>
                         <div className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor('allocated')}`}>
                           Allocated

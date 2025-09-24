@@ -2,6 +2,34 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '../../../../lib/dbConnect';
 import Progress from '../../../../models/Progress';
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await dbConnect();
+
+    const progress = await Progress.findById(params.id)
+      .populate('studentId')
+      .populate('projectId');
+
+    if (!progress) {
+      return NextResponse.json(
+        { error: 'Progress report not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(progress);
+  } catch (error) {
+    console.error('Error fetching progress report:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch progress report' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -37,6 +65,32 @@ export async function PATCH(
     console.error('Error updating progress report:', error);
     return NextResponse.json(
       { error: 'Failed to update progress report' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await dbConnect();
+
+    const deletedProgress = await Progress.findByIdAndDelete(params.id);
+
+    if (!deletedProgress) {
+      return NextResponse.json(
+        { error: 'Progress report not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ message: 'Progress report deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting progress report:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete progress report' },
       { status: 500 }
     );
   }

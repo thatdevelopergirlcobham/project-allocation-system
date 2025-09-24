@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useApp } from '../../../context/AppContext';
@@ -125,14 +127,14 @@ export default function AdminSupervisors() {
                               {supervisor.email} • {supervisor.department}
                             </div>
                             <div className="text-sm text-gray-500">
-                              Specialization: {supervisor.specialization} • Projects: {supervisor.projectsCount}
+                              Specialization: {supervisor.specialization || 'Not specified'} • Projects: {supervisor.projectsCount || 0}
                             </div>
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-4">
                         <div className="text-sm text-gray-500">
-                          Joined: {new Date(supervisor.createdAt).toLocaleDateString()}
+                          Joined: {supervisor.createdAt ? new Date(supervisor.createdAt).toLocaleDateString() : 'Unknown date'}
                         </div>
                         <div className="flex space-x-2">
                           <Link

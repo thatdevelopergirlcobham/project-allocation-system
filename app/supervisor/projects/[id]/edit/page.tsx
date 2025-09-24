@@ -1,16 +1,18 @@
-import { useState, useEffect } from 'react';
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useApp } from '../../../../context/AppContext';
-import { useToast } from '../../../../components/Toast';
-import type { Project } from '../../../../types';
+import { useApp } from '../../../../../context/AppContext';
+import { useToast } from '../../../../../components/Toast';
+// Project type is now inferred from the API response
 import { GraduationCap, ArrowLeft, Save, Trash2 } from 'lucide-react';
 
 export default function SupervisorEditProject({ params }: { params: { id: string } }) {
   const { state } = useApp();
   const router = useRouter();
   const { addToast } = useToast();
-  const [project, setProject] = useState<Project | null>(null);
+  // We'll use formData directly instead of a separate project state
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -21,21 +23,11 @@ export default function SupervisorEditProject({ params }: { params: { id: string
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (!state.user || state.user.role !== 'supervisor') {
-      router.push('/login');
-      return;
-    }
-
-    fetchProject();
-  }, [state.user, router]);
-
-  const fetchProject = async () => {
+  const fetchProject = useCallback(async () => {
     try {
       const response = await fetch(`/api/projects/${params.id}`);
       if (response.ok) {
         const data = await response.json();
-        setProject(data);
         setFormData({
           title: data.title || '',
           description: data.description || '',
@@ -61,7 +53,11 @@ export default function SupervisorEditProject({ params }: { params: { id: string
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id, router, addToast]);
+
+  useEffect(() => {
+    fetchProject();
+  }, [fetchProject]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

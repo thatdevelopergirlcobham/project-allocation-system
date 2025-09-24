@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '../../../lib/dbConnect';
 import Supervisor from '../../../models/Supervisor';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     await dbConnect();
 

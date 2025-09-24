@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../components/Toast';
-import { UserPlus, Eye, EyeOff, Mail, User, Building2, GraduationCap } from 'lucide-react';
+import { UserPlus, Eye, EyeOff, Mail, User, Building2, GraduationCap, ArrowLeft } from 'lucide-react';
+import { UserRole } from '../../types';
 
-type UserRole = 'admin' | 'supervisor' | 'student';
+// Using UserRole from types.ts
 
 interface RegisterFormData {
   name: string;
@@ -21,13 +22,11 @@ interface RegisterFormData {
 }
 
 export default function Register() {
-  const { state } = useApp();
   const router = useRouter();
   const { addToast } = useToast();
+  const { signup, loading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [canAccess, setCanAccess] = useState<boolean>(true); // Always allow access
 
   const [formData, setFormData] = useState<RegisterFormData>({
     name: '',
@@ -39,11 +38,6 @@ export default function Register() {
     matricNumber: '',
     specialization: ''
   });
-
-  useEffect(() => {
-    // Always allow access to register page
-    setCanAccess(true);
-  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -74,82 +68,55 @@ export default function Register() {
       return;
     }
 
-    setLoading(true);
+    // Prepare data to send to API based on role
+    const registerData = {
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      role: formData.role,
+      department: formData.department,
+      matricNumber: formData.matricNumber,
+      specialization: formData.specialization
+    };
 
-    try {
-      // Prepare data to send to API based on role
-      const baseData = {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        role: formData.role
-      };
+    // Add role-specific fields only if required
+    if (formData.role === 'supervisor') {
+      registerData.department = formData.department;
+      registerData.specialization = formData.specialization;
+    } else if (formData.role === 'student') {
+      registerData.department = formData.department;
+      registerData.matricNumber = formData.matricNumber;
+    }
+    // Admin doesn't need additional fields
 
-      const dataToSend = { ...baseData } as typeof baseData & {
-        department?: string;
-        matricNumber?: string;
-        specialization?: string;
-      };
+    const result = await signup(registerData);
 
-      // Add role-specific fields only if required
-      if (formData.role === 'supervisor') {
-        dataToSend.department = formData.department;
-        dataToSend.specialization = formData.specialization;
-      } else if (formData.role === 'student') {
-        dataToSend.department = formData.department;
-        dataToSend.matricNumber = formData.matricNumber;
-      }
-      // Admin doesn't need additional fields
-
-      console.log('Sending registration data:', dataToSend);
-
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dataToSend),
+    if (result.success) {
+      addToast({
+        type: 'success',
+        title: 'Registration successful',
+        message: `${formData.role.charAt(0).toUpperCase() + formData.role.slice(1)} account has been created`
       });
-
-      console.log('Registration response status:', response.status);
-
-      if (response.ok) {
-        addToast({
-          type: 'success',
-          title: 'User created successfully',
-          message: `${formData.role.charAt(0).toUpperCase() + formData.role.slice(1)} account has been created`
-        });
-        router.push('/login');
-      } else {
-        const errorData = await response.json();
-        console.log('Registration error data:', errorData);
-        addToast({
-          type: 'error',
-          title: 'Registration failed',
-          message: errorData.error || 'Failed to create user account'
-        });
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
+      router.push('/login');
+    } else {
       addToast({
         type: 'error',
-        title: 'Registration error',
-        message: 'An error occurred during registration'
+        title: 'Registration failed',
+        message: result.message
       });
-    } finally {
-      setLoading(false);
     }
   };
 
-  // Always return the registration form since access is always allowed
+  // Return the registration form
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white">
       <nav className="bg-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <Link href="/" className="flex items-center text-indigo-600 hover:text-indigo-700">
-                ← Back to Home
+              <Link href="/" className="flex items-center text-indigo-600 hover:text-indigo-700 transition-colors">
+                <ArrowLeft className="h-5 w-5 mr-1" />
+                Back to Home
               </Link>
             </div>
             <div className="flex items-center">
@@ -159,11 +126,9 @@ export default function Register() {
               </span>
             </div>
             <div className="flex items-center space-x-4">
-              {state.user ? (
-                <span className="text-black">Welcome back!</span>
-              ) : (
-                <span className="text-black">Create Account</span>
-              )}
+              <Link href="/login" className="text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
+                Sign In
+              </Link>
             </div>
           </div>
         </div>
@@ -176,14 +141,14 @@ export default function Register() {
             <p className="text-gray-600">Register a new account for the Project Allocation System</p>
           </div>
 
-          <div className="bg-white shadow rounded-lg p-6">
+          <div className="bg-white shadow-xl rounded-lg p-8 border border-gray-100">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Basic Information */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Basic Information</h3>
+                <h3 className="text-lg font-medium text-indigo-900 border-b border-indigo-100 pb-2">Basic Information</h3>
 
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-black mb-1">
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                     Full Name *
                   </label>
                   <div className="relative">
@@ -197,12 +162,12 @@ export default function Register() {
                       className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="Enter full name"
                     />
-                    <User className="h-5 w-5 text-black absolute left-3 top-3" />
+                    <User className="h-5 w-5 text-indigo-500 absolute left-3 top-3" />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-black mb-1">
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                     Email Address *
                   </label>
                   <div className="relative">
@@ -216,13 +181,13 @@ export default function Register() {
                       className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="user@university.edu"
                     />
-                    <Mail className="h-5 w-5 text-black absolute left-3 top-3" />
+                    <Mail className="h-5 w-5 text-indigo-500 absolute left-3 top-3" />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-black mb-1">
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                       Password *
                     </label>
                     <div className="relative">
@@ -247,7 +212,7 @@ export default function Register() {
                   </div>
 
                   <div>
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-black mb-1">
+                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                       Confirm Password *
                     </label>
                     <div className="relative">
@@ -273,7 +238,7 @@ export default function Register() {
                 </div>
 
                 <div>
-                  <label htmlFor="role" className="block text-sm font-medium text-black mb-1">
+                  <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
                     User Role *
                   </label>
                   <select
@@ -282,7 +247,7 @@ export default function Register() {
                     required
                     value={formData.role}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-gray-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                   >
                     <option value="">Select Role</option>
                     <option value="admin">Administrator</option>
@@ -295,23 +260,23 @@ export default function Register() {
               {/* Role-specific Information */}
               {formData.role && (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+                  <h3 className="text-lg font-medium text-indigo-900 border-b border-indigo-100 pb-2">
                     {formData.role.charAt(0).toUpperCase() + formData.role.slice(1)} Information
                   </h3>
 
-                  {formData.role !== 'admin' && (
+                  {formData.role !== 'admin' as UserRole && (
                     <div>
-                      <label htmlFor="department" className="block text-sm font-medium text-black mb-1">
+                      <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-1">
                         Department *
                       </label>
                       <div className="relative">
                         <select
                           id="department"
                           name="department"
-                          required={formData.role !== 'admin'}
+                          required={formData.role !== 'admin' as UserRole}
                           value={formData.department}
                           onChange={handleChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-3 py-2 border text-black border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         >
                           <option value="">Select Department</option>
                           <option value="Computer Science">Computer Science</option>
@@ -324,14 +289,14 @@ export default function Register() {
                           <option value="Chemistry">Chemistry</option>
                           <option value="Biology">Biology</option>
                         </select>
-                        <Building2 className="h-5 w-5 text-black absolute right-3 top-3 pointer-events-none" />
+                        <Building2 className="h-5 w-5 text-indigo-500 absolute right-3 top-3 pointer-events-none" />
                       </div>
                     </div>
                   )}
 
                   {formData.role === 'student' && (
                     <div>
-                      <label htmlFor="matricNumber" className="block text-sm font-medium text-black mb-1">
+                      <label htmlFor="matricNumber" className="block text-sm font-medium text-gray-700 mb-1">
                         Matriculation Number *
                       </label>
                       <div className="relative">
@@ -339,30 +304,30 @@ export default function Register() {
                           type="text"
                           id="matricNumber"
                           name="matricNumber"
-                          required={formData.role === 'student'}
+                          required={formData.role === 'student' as UserRole}
                           value={formData.matricNumber}
                           onChange={handleChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-3 py-2 border text-black border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                           placeholder="Enter matriculation number"
                         />
-                        <GraduationCap className="h-5 w-5 text-black absolute right-3 top-3" />
+                        <GraduationCap className="h-5 w-5 text-indigo-500 absolute right-3 top-3" />
                       </div>
                     </div>
                   )}
 
                   {formData.role === 'supervisor' && (
                     <div>
-                      <label htmlFor="specialization" className="block text-sm font-medium text-black mb-1">
+                      <label htmlFor="specialization" className="block text-sm font-medium text-gray-700 mb-1">
                         Specialization *
                       </label>
                       <input
                         type="text"
                         id="specialization"
                         name="specialization"
-                        required={formData.role === 'supervisor'}
+                        required={formData.role === 'supervisor' as UserRole}
                         value={formData.specialization}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-3 py-2 border text-black border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         placeholder="Enter specialization area"
                       />
                     </div>
@@ -374,14 +339,14 @@ export default function Register() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex items-center bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-60"
+                  className="flex items-center bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-60 shadow-md font-medium"
                 >
                   <UserPlus className="h-5 w-5 mr-2" />
                   {loading ? 'Creating User...' : 'Create User'}
                 </button>
                 <Link
                   href="/login"
-                  className="flex items-center bg-gray-300 text-black px-6 py-2 rounded-md hover:bg-gray-400 transition-colors"
+                  className="flex items-center bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium"
                 >
                   Cancel
                 </Link>

@@ -1,50 +1,25 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useApp } from '../../context/AppContext';
-import { GraduationCap, Users, BookOpen, TrendingUp, LogOut } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
+import { Users, BookOpen, TrendingUp, Calendar, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function Dashboard() {
-  const { state, dispatch } = useApp();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!state.user) {
-      router.push('/login');
-    }
-  }, [state.user, router]);
-
-  const handleLogout = () => {
-    dispatch({ type: 'LOGOUT' });
-    router.push('/');
-  };
-
-  if (!state.user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  const { user } = useAuth();
 
   const getDashboardContent = () => {
-    switch (state.user?.role) {
+    switch (user?.role) {
       case 'student':
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">Student Dashboard</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Student Dashboard</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Link href="/allocation" className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                 <BookOpen className="h-8 w-8 text-indigo-600 mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">View Project</h3>
                 <p className="text-gray-600">Check your assigned project</p>
               </Link>
-              <Link href="/progress" className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+              <Link href="/student/progress" className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                 <TrendingUp className="h-8 w-8 text-indigo-600 mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Submit Progress</h3>
                 <p className="text-gray-600">Update your project progress</p>
@@ -59,9 +34,9 @@ export default function Dashboard() {
         );
       case 'supervisor':
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">Supervisor Dashboard</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Supervisor Dashboard</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Link href="/supervisor/projects" className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                 <BookOpen className="h-8 w-8 text-indigo-600 mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Manage Projects</h3>
@@ -82,9 +57,9 @@ export default function Dashboard() {
         );
       case 'admin':
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">Admin Dashboard</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Admin Dashboard</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Link href="/admin/students" className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                 <Users className="h-8 w-8 text-indigo-600 mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Manage Students</h3>
@@ -113,38 +88,99 @@ export default function Dashboard() {
     }
   };
 
+  // Dashboard summary cards
+  const summaryCards = [
+    {
+      title: 'Active Projects',
+      value: '12',
+      icon: BookOpen,
+      color: 'bg-blue-500'
+    },
+    {
+      title: 'Students',
+      value: '48',
+      icon: Users,
+      color: 'bg-green-500'
+    },
+    {
+      title: 'Upcoming Deadlines',
+      value: '3',
+      icon: Calendar,
+      color: 'bg-yellow-500'
+    },
+    {
+      title: 'Completion Rate',
+      value: '78%',
+      icon: CheckCircle,
+      color: 'bg-purple-500'
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <GraduationCap className="h-8 w-8 text-indigo-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">
-                Project Allocation System
-              </span>
+    <>
+      {/* Welcome Banner */}
+      <div className="bg-white rounded-xl shadow-md p-6 mb-6 border-l-4 border-indigo-500">
+        <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user?.name}!</h1>
+        <p className="text-gray-600 mt-1">Here's an overview of your project allocation system.</p>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {summaryCards.map((card, index) => (
+          <div key={index} className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className={`rounded-full p-3 ${card.color}`}>
+                  <card.icon className="h-6 w-6 text-white" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium text-gray-700">{card.title}</h3>
+                  <p className="text-2xl font-bold text-gray-900">{card.value}</p>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-black">Welcome, {state.user.name}</span>
-              <button
-                onClick={handleLogout}
-                className="flex items-center text-gray-600 hover:text-gray-900"
-              >
-                <LogOut className="h-5 w-5 mr-1" />
-                Logout
-              </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Main Dashboard Content */}
+      <div className="bg-white rounded-xl shadow-md p-6">
+        {getDashboardContent()}
+      </div>
+
+      {/* Recent Activity */}
+      <div className="mt-8 bg-white rounded-xl shadow-md p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h2>
+        <div className="space-y-4">
+          <div className="flex items-start">
+            <div className="bg-green-100 p-2 rounded-full">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-900">Project allocation completed</p>
+              <p className="text-xs text-gray-500">2 hours ago</p>
+            </div>
+          </div>
+          <div className="flex items-start">
+            <div className="bg-blue-100 p-2 rounded-full">
+              <Users className="h-5 w-5 text-blue-600" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-900">New student registered</p>
+              <p className="text-xs text-gray-500">Yesterday</p>
+            </div>
+          </div>
+          <div className="flex items-start">
+            <div className="bg-yellow-100 p-2 rounded-full">
+              <AlertCircle className="h-5 w-5 text-yellow-600" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-900">Deadline approaching for progress report</p>
+              <p className="text-xs text-gray-500">2 days ago</p>
             </div>
           </div>
         </div>
-      </nav>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {getDashboardContent()}
-        </div>
       </div>
-    </div>
+    </>
   );
 }

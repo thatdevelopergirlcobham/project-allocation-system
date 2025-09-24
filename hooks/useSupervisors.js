@@ -1,6 +1,6 @@
+'use client';
+
 import { useState, useEffect } from 'react';
-import dbConnect from '../lib/dbConnect';
-import Supervisor from '../models/Supervisor';
 
 export function useSupervisors() {
   const [supervisors, setSupervisors] = useState([]);
@@ -10,8 +10,11 @@ export function useSupervisors() {
   const fetchSupervisors = async () => {
     try {
       setLoading(true);
-      await dbConnect();
-      const supervisorsData = await Supervisor.find({});
+      const response = await fetch('/api/supervisors');
+      if (!response.ok) {
+        throw new Error('Failed to fetch supervisors');
+      }
+      const supervisorsData = await response.json();
       setSupervisors(supervisorsData || []);
       setError(null);
     } catch (err) {
@@ -24,8 +27,20 @@ export function useSupervisors() {
 
   const createSupervisor = async (supervisorData) => {
     try {
-      await dbConnect();
-      const newSupervisor = await Supervisor.create(supervisorData);
+      const response = await fetch('/api/supervisors', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(supervisorData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create supervisor');
+      }
+      
+      const newSupervisor = await response.json();
       setSupervisors([...supervisors, newSupervisor]);
       return newSupervisor;
     } catch (err) {
@@ -36,8 +51,20 @@ export function useSupervisors() {
 
   const updateSupervisor = async (id, supervisorData) => {
     try {
-      await dbConnect();
-      const updatedSupervisor = await Supervisor.findByIdAndUpdate(id, supervisorData, { new: true });
+      const response = await fetch(`/api/supervisors/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(supervisorData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update supervisor');
+      }
+      
+      const updatedSupervisor = await response.json();
       setSupervisors(supervisors.map(supervisor =>
         supervisor._id === id ? updatedSupervisor : supervisor
       ));
@@ -50,8 +77,15 @@ export function useSupervisors() {
 
   const deleteSupervisor = async (id) => {
     try {
-      await dbConnect();
-      await Supervisor.findByIdAndDelete(id);
+      const response = await fetch(`/api/supervisors/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete supervisor');
+      }
+      
       setSupervisors(supervisors.filter(supervisor => supervisor._id !== id));
     } catch (err) {
       setError(err.message);

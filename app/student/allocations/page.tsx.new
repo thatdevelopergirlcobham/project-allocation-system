@@ -9,28 +9,7 @@ import { GraduationCap, ArrowLeft, BookOpen } from 'lucide-react';
 export default function StudentAllocations() {
   const { state } = useApp();
   const router = useRouter();
-  interface Allocation {
-    _id: string;
-    studentId?: {
-      _id: string;
-      name?: string;
-      email?: string;
-      matricNumber?: string;
-    };
-    projectId?: {
-      _id: string;
-      title?: string;
-      description?: string;
-      department?: string;
-    };
-    supervisorId?: {
-      _id: string;
-      name?: string;
-    };
-    createdAt: string;
-  }
-
-  const [allocations, setAllocations] = useState<Allocation[]>([]);
+  const [allocations, setAllocations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAllocations = useCallback(async () => {
@@ -40,7 +19,7 @@ export default function StudentAllocations() {
       if (response.ok) {
         const data = await response.json();
         // Filter to show only this student's allocations
-        const studentAllocations = data.filter((allocation: Allocation) =>
+        const studentAllocations = data.filter((allocation: any) =>
           allocation.studentId?._id === state.user?._id
         );
         setAllocations(studentAllocations);
@@ -119,7 +98,7 @@ export default function StudentAllocations() {
             </div>
           ) : (
             <div className="space-y-6">
-              {allocations.map((allocation) => (
+              {allocations.map((allocation: any) => (
                 <div key={allocation._id} className="bg-white shadow rounded-lg p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">

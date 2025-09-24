@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { useProgress } from '../hooks/useProgress';
+import { ProgressReport } from '../types';
 
 interface ProgressFormProps {
   studentId: string;
   projectId: string;
-  onSubmit?: (data: { _id: string; studentId: string; projectId: string; report: string; submissionDate: Date; feedback?: string }) => void;
+  onSubmit?: (data: ProgressReport) => void;
   onCancel?: () => void;
 }
 

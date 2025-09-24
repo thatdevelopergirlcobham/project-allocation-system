@@ -1,6 +1,6 @@
+'use client';
+
 import { useState, useEffect } from 'react';
-import dbConnect from '../lib/dbConnect';
-import Allocation from '../models/Allocation';
 
 export function useAllocations() {
   const [allocations, setAllocations] = useState([]);
@@ -10,11 +10,11 @@ export function useAllocations() {
   const fetchAllocations = async () => {
     try {
       setLoading(true);
-      await dbConnect();
-      const allocationsData = await Allocation.find({})
-        .populate('studentId')
-        .populate('projectId')
-        .populate('supervisorId');
+      const response = await fetch('/api/allocations');
+      if (!response.ok) {
+        throw new Error('Failed to fetch allocations');
+      }
+      const allocationsData = await response.json();
       setAllocations(allocationsData || []);
       setError(null);
     } catch (err) {
@@ -27,8 +27,20 @@ export function useAllocations() {
 
   const createAllocation = async (allocationData) => {
     try {
-      await dbConnect();
-      const newAllocation = await Allocation.create(allocationData);
+      const response = await fetch('/api/allocations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(allocationData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create allocation');
+      }
+      
+      const newAllocation = await response.json();
       setAllocations([...allocations, newAllocation]);
       return newAllocation;
     } catch (err) {
@@ -39,8 +51,20 @@ export function useAllocations() {
 
   const updateAllocation = async (id, allocationData) => {
     try {
-      await dbConnect();
-      const updatedAllocation = await Allocation.findByIdAndUpdate(id, allocationData, { new: true });
+      const response = await fetch(`/api/allocations/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(allocationData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update allocation');
+      }
+      
+      const updatedAllocation = await response.json();
       setAllocations(allocations.map(allocation =>
         allocation._id === id ? updatedAllocation : allocation
       ));
@@ -53,8 +77,15 @@ export function useAllocations() {
 
   const deleteAllocation = async (id) => {
     try {
-      await dbConnect();
-      await Allocation.findByIdAndDelete(id);
+      const response = await fetch(`/api/allocations/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete allocation');
+      }
+      
       setAllocations(allocations.filter(allocation => allocation._id !== id));
     } catch (err) {
       setError(err.message);

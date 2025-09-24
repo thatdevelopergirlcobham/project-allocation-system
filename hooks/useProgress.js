@@ -1,6 +1,6 @@
+'use client';
+
 import { useState, useEffect } from 'react';
-import dbConnect from '../lib/dbConnect';
-import Progress from '../models/Progress';
 
 export function useProgress() {
   const [progressReports, setProgressReports] = useState([]);
@@ -10,10 +10,11 @@ export function useProgress() {
   const fetchProgress = async () => {
     try {
       setLoading(true);
-      await dbConnect();
-      const progressData = await Progress.find({})
-        .populate('studentId')
-        .populate('projectId');
+      const response = await fetch('/api/progress');
+      if (!response.ok) {
+        throw new Error('Failed to fetch progress reports');
+      }
+      const progressData = await response.json();
       setProgressReports(progressData || []);
       setError(null);
     } catch (err) {
@@ -26,8 +27,20 @@ export function useProgress() {
 
   const createProgress = async (progressData) => {
     try {
-      await dbConnect();
-      const newProgress = await Progress.create(progressData);
+      const response = await fetch('/api/progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(progressData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create progress report');
+      }
+      
+      const newProgress = await response.json();
       setProgressReports([...progressReports, newProgress]);
       return newProgress;
     } catch (err) {
@@ -38,8 +51,20 @@ export function useProgress() {
 
   const updateProgress = async (id, progressData) => {
     try {
-      await dbConnect();
-      const updatedProgress = await Progress.findByIdAndUpdate(id, progressData, { new: true });
+      const response = await fetch(`/api/progress/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(progressData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update progress report');
+      }
+      
+      const updatedProgress = await response.json();
       setProgressReports(progressReports.map(progress =>
         progress._id === id ? updatedProgress : progress
       ));
@@ -52,8 +77,15 @@ export function useProgress() {
 
   const deleteProgress = async (id) => {
     try {
-      await dbConnect();
-      await Progress.findByIdAndDelete(id);
+      const response = await fetch(`/api/progress/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete progress report');
+      }
+      
       setProgressReports(progressReports.filter(progress => progress._id !== id));
     } catch (err) {
       setError(err.message);

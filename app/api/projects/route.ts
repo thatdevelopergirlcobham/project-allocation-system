@@ -7,14 +7,15 @@ export async function GET(request: NextRequest) {
     await dbConnect();
 
     const { searchParams } = new URL(request.url);
-    const supervisor = searchParams.get('supervisor');
     const supervisorId = searchParams.get('supervisorId');
-
-    let query = {};
-
-    if (supervisor === 'true' && supervisorId) {
-      query = { supervisorId };
-    }
+    const department = searchParams.get('department');
+    const status = searchParams.get('status');
+    
+    // Build query object
+    const query: Record<string, string> = {};
+    if (supervisorId) query.supervisorId = supervisorId;
+    if (department) query.department = department;
+    if (status) query.status = status;
 
     const projects = await Project.find(query)
       .populate('supervisorId', 'name email')

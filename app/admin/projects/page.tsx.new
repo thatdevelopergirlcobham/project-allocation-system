@@ -131,7 +131,7 @@ export default function AdminProjects() {
                       </div>
                       <p className="text-gray-600 mb-2">{project.description}</p>
                       <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span>Supervisor: {typeof project.supervisorId === 'object' && project.supervisorId?.name ? project.supervisorId.name : 'Unknown'}</span>
+                        <span>Supervisor: {project.supervisorId?.name || 'Unknown'}</span>
                         <span>Department: {project.department}</span>
                         <span>Students: {project.currentStudents}/{project.maxStudents}</span>
                       </div>
@@ -139,7 +139,7 @@ export default function AdminProjects() {
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-gray-500">
-                      Created: {project.createdAt ? new Date(project.createdAt).toLocaleDateString() : 'Unknown date'}
+                      Created: {new Date(project.createdAt).toLocaleDateString()}
                     </div>
                     <div className="flex space-x-2">
                       <Link

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '../../../../lib/dbConnect';
 import User from '../../../../models/User';
+import mongoose from 'mongoose';
 
 export async function POST(request: NextRequest) {
   try {
@@ -90,7 +91,16 @@ export async function POST(request: NextRequest) {
     const savedUser = await user.save();
 
     // Return user data without password
-    const userResponse = savedUser.toObject();
+    let userResponse;
+    
+    // Handle both mongoose models and our mock models
+    if (typeof savedUser.toObject === 'function') {
+      userResponse = savedUser.toObject();
+    } else {
+      // For mock database
+      userResponse = { ...savedUser };
+    }
+    
     delete userResponse.password;
 
     return NextResponse.json({
@@ -98,11 +108,47 @@ export async function POST(request: NextRequest) {
       user: userResponse
     }, { status: 201 });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Registration error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    
+    // Provide more detailed error messages
+    if (error instanceof mongoose.Error.ValidationError) {
+      // Mongoose validation error
+      const validationErrors = Object.values(error.errors).map((err) => err.message);
+      return NextResponse.json(
+        { error: 'Validation error', details: validationErrors },
+        { status: 400 }
+      );
+    } else if (error instanceof Error && 'code' in error && error.code === 11000) {
+      // Duplicate key error (MongoDB)
+      // Cast to unknown first to avoid TypeScript error
+      const mongoError = error as unknown as { keyValue: Record<string, unknown> };
+      
+      // Check if keyValue exists before accessing it
+      if (mongoError && 'keyValue' in mongoError) {
+        const field = Object.keys(mongoError.keyValue)[0];
+        return NextResponse.json(
+          { error: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists` },
+          { status: 409 }
+        );
+      }
+      
+      // Fallback for when keyValue is not available
+      return NextResponse.json(
+        { error: 'A duplicate entry already exists' },
+        { status: 409 }
+      );
+    } else {
+      // Other errors
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      return NextResponse.json(
+        { 
+          error: 'Internal server error', 
+          details: errorMessage,
+          mockDb: process.env.USE_MOCK_DB === 'true' ? 'Using mock database' : 'Using real database'
+        },
+        { status: 500 }
+      );
+    }
   }
 }

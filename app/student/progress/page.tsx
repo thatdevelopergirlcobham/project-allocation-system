@@ -5,33 +5,48 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useApp } from '../../../context/AppContext';
 import { GraduationCap, ArrowLeft, Plus, MessageSquare } from 'lucide-react';
+import ProgressForm from '../../../components/ProgressForm';
+import { ProgressReport, Project } from '../../../types';
 
 export default function StudentProgress() {
   const { state } = useApp();
   const router = useRouter();
-  const [progressReports, setProgressReports] = useState<any[]>([]);
+  // We're using direct API calls instead of the hook for better control over the UI state
+  const [progressReports, setProgressReports] = useState<ProgressReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [newReport, setNewReport] = useState({
-    report: '',
-    projectId: ''
-  });
+  const [studentProject, setStudentProject] = useState<Project | null>(null);
 
-  const fetchProgressReports = useCallback(async () => {
+  const fetchStudentData = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/progress');
-      if (response.ok) {
-        const data = await response.json();
+      // Fetch the student's assigned project
+      const allocResponse = await fetch(`/api/allocations?studentId=${state.user?._id}`);
+      if (allocResponse.ok) {
+        const allocations = await allocResponse.json();
+        if (allocations && allocations.length > 0) {
+          setStudentProject(allocations[0].projectId as Project);
+        }
+      }
+
+      // Fetch progress reports
+      const progressResponse = await fetch('/api/progress');
+      if (progressResponse.ok) {
+        const data = await progressResponse.json();
         // Filter to show only this student's reports
-        const studentReports = data.filter((report: any) => report.studentId?._id === state.user?._id);
+        const studentReports = data.filter((report: ProgressReport) => {
+          if (typeof report.studentId === 'object' && report.studentId?._id) {
+            return report.studentId._id === state.user?._id;
+          }
+          return report.studentId === state.user?._id;
+        });
         setProgressReports(studentReports);
       } else {
         console.error('Failed to fetch progress reports');
         setProgressReports([]);
       }
     } catch (error) {
-      console.error('Error fetching progress:', error);
+      console.error('Error fetching data:', error);
       setProgressReports([]);
     } finally {
       setLoading(false);
@@ -44,34 +59,12 @@ export default function StudentProgress() {
       return;
     }
 
-    fetchProgressReports();
-  }, [state.user, fetchProgressReports, router]);
+    fetchStudentData();
+  }, [state.user, fetchStudentData, router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newReport.report.trim() || !newReport.projectId) return;
-
-    try {
-      const response = await fetch('/api/progress', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          studentId: state.user?._id,
-          projectId: newReport.projectId,
-          report: newReport.report
-        }),
-      });
-
-      if (response.ok) {
-        setNewReport({ report: '', projectId: '' });
-        setShowForm(false);
-        fetchProgressReports(); // Refresh the list
-      }
-    } catch (error) {
-      console.error('Error submitting progress:', error);
-    }
+  const handleProgressSubmit = (newProgress: ProgressReport) => {
+    setProgressReports([newProgress, ...progressReports]);
+    setShowForm(false);
   };
 
   if (!state.user || state.user.role !== 'student') {
@@ -123,57 +116,29 @@ export default function StudentProgress() {
           </div>
 
           {/* New Report Form */}
-          {showForm && (
+          {showForm && studentProject && (
             <div className="bg-white shadow rounded-lg p-6 mb-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Submit New Progress Report</h2>
-              <form onSubmit={handleSubmit}>
-                <div className="mb-4">
-                  <label htmlFor="projectId" className="block text-sm font-medium text-gray-700 mb-1">
-                    Project
-                  </label>
-                  <select
-                    id="projectId"
-                    value={newReport.projectId}
-                    onChange={(e) => setNewReport({...newReport, projectId: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                    required
-                  >
-                    <option value="">Select a project</option>
-                    <option value="project1">AI Research Project</option>
-                    <option value="project2">Web Development Project</option>
-                    <option value="project3">Data Science Project</option>
-                  </select>
-                </div>
-                <div className="mb-4">
-                  <label htmlFor="report" className="block text-sm font-medium text-gray-700 mb-1">
-                    Progress Report
-                  </label>
-                  <textarea
-                    id="report"
-                    value={newReport.report}
-                    onChange={(e) => setNewReport({...newReport, report: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                    rows={4}
-                    placeholder="Describe your progress, challenges, and next steps..."
-                    required
-                  />
-                </div>
-                <div className="flex space-x-3">
-                  <button
-                    type="submit"
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
-                  >
-                    Submit Report
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowForm(false)}
-                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
+              <ProgressForm 
+                studentId={state.user?._id || ''} 
+                projectId={studentProject._id} 
+                onSubmit={handleProgressSubmit}
+                onCancel={() => setShowForm(false)}
+              />
+            </div>
+          )}
+          
+          {showForm && !studentProject && (
+            <div className="bg-white shadow rounded-lg p-6 mb-6 text-center">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">No Project Assigned</h2>
+              <p className="text-gray-600 mb-4">You need to be assigned to a project before you can submit progress reports.</p>
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
+              >
+                Close
+              </button>
             </div>
           )}
 
@@ -191,12 +156,12 @@ export default function StudentProgress() {
             </div>
           ) : (
             <div className="space-y-4">
-              {progressReports.map((report: any) => (
+              {progressReports.map((report: ProgressReport) => (
                 <div key={report._id} className="bg-white shadow rounded-lg p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">
-                        Project: {report.projectId?.title || 'Unknown Project'}
+                        Project: {typeof report.projectId === 'object' && report.projectId?.title ? report.projectId.title : 'Unknown Project'}
                       </h3>
                       <p className="text-sm text-gray-500">
                         Submitted: {new Date(report.submissionDate).toLocaleDateString()}

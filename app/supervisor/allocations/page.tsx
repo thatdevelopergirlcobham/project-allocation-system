@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -7,17 +9,28 @@ import { GraduationCap, ArrowLeft, Users } from 'lucide-react';
 export default function SupervisorAllocations() {
   const { state } = useApp();
   const router = useRouter();
-  const [allocations, setAllocations] = useState<any[]>([]);
+  interface Allocation {
+    _id: string;
+    studentId?: {
+      _id: string;
+      name?: string;
+      email?: string;
+      matricNumber?: string;
+    };
+    projectId?: {
+      _id: string;
+      title?: string;
+    };
+    supervisorId?: {
+      _id: string;
+      name?: string;
+    };
+    createdAt: string;
+  }
+
+  const [allocations, setAllocations] = useState<Allocation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!state.user || state.user.role !== 'supervisor') {
-      router.push('/login');
-      return;
-    }
-
-    fetchAllocations();
-  }, [state.user, router]);
 
   const fetchAllocations = useCallback(async () => {
     setLoading(true);
@@ -26,7 +39,7 @@ export default function SupervisorAllocations() {
       if (response.ok) {
         const data = await response.json();
         // Filter to show only this supervisor's allocations
-        const supervisorAllocations = data.filter((allocation: any) =>
+        const supervisorAllocations = data.filter((allocation: Allocation) =>
           allocation.supervisorId?._id === state.user?._id
         );
         setAllocations(supervisorAllocations);
@@ -106,7 +119,7 @@ export default function SupervisorAllocations() {
           ) : (
             <div className="bg-white shadow overflow-hidden sm:rounded-md">
               <ul className="divide-y divide-gray-200">
-                {allocations.map((allocation: any) => (
+                {allocations.map((allocation) => (
                   <li key={allocation._id} className="px-6 py-4">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">

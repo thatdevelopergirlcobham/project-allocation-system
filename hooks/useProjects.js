@@ -1,17 +1,25 @@
+'use client';
+
 import { useState, useEffect } from 'react';
-import dbConnect from '../lib/dbConnect';
-import Project from '../models/Project';
 
 export function useProjects() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchProjects = async () => {
+  const fetchProjects = async (supervisorId = null) => {
     try {
       setLoading(true);
-      await dbConnect();
-      const projectsData = await Project.find({}).populate('supervisorId');
+      let url = '/api/projects';
+      if (supervisorId) {
+        url += `?supervisor=true&supervisorId=${supervisorId}`;
+      }
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch projects');
+      }
+      const projectsData = await response.json();
       setProjects(projectsData || []);
       setError(null);
     } catch (err) {
@@ -24,8 +32,20 @@ export function useProjects() {
 
   const createProject = async (projectData) => {
     try {
-      await dbConnect();
-      const newProject = await Project.create(projectData);
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(projectData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create project');
+      }
+      
+      const newProject = await response.json();
       setProjects([...projects, newProject]);
       return newProject;
     } catch (err) {
@@ -36,8 +56,20 @@ export function useProjects() {
 
   const updateProject = async (id, projectData) => {
     try {
-      await dbConnect();
-      const updatedProject = await Project.findByIdAndUpdate(id, projectData, { new: true });
+      const response = await fetch(`/api/projects/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(projectData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update project');
+      }
+      
+      const updatedProject = await response.json();
       setProjects(projects.map(project =>
         project._id === id ? updatedProject : project
       ));
@@ -50,8 +82,15 @@ export function useProjects() {
 
   const deleteProject = async (id) => {
     try {
-      await dbConnect();
-      await Project.findByIdAndDelete(id);
+      const response = await fetch(`/api/projects/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete project');
+      }
+      
       setProjects(projects.filter(project => project._id !== id));
     } catch (err) {
       setError(err.message);

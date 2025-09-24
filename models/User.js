@@ -59,6 +59,14 @@ UserSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
 
   try {
+    // Check if we're in a test/mock environment
+    if (process.env.USE_MOCK_DB === 'true') {
+      // For mock DB, just prefix the password with 'hashed:' to simulate hashing
+      this.password = `hashed:${this.password}`;
+      return next();
+    }
+    
+    // Real hashing for production
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
     next();
@@ -75,6 +83,13 @@ UserSchema.pre('save', function(next) {
 
 // Method to compare password
 UserSchema.methods.comparePassword = async function(candidatePassword) {
+  // Check if we're in a test/mock environment
+  if (process.env.USE_MOCK_DB === 'true') {
+    // For mock DB, just check if the hashed password matches our format
+    return this.password === `hashed:${candidatePassword}` || candidatePassword === this.password;
+  }
+  
+  // Real comparison for production
   return await bcrypt.compare(candidatePassword, this.password);
 };
 

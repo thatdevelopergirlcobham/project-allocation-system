@@ -2,11 +2,23 @@ import { NextResponse } from 'next/server';
 import dbConnect from '../../../lib/dbConnect';
 import Allocation from '../../../models/Allocation';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await dbConnect();
-
-    const allocations = await Allocation.find({})
+    
+    // Parse query parameters
+    const { searchParams } = new URL(request.url);
+    const studentId = searchParams.get('studentId');
+    const projectId = searchParams.get('projectId');
+    const supervisorId = searchParams.get('supervisorId');
+    
+    // Build query object
+    const query: Record<string, string> = {};
+    if (studentId) query.studentId = studentId;
+    if (projectId) query.projectId = projectId;
+    if (supervisorId) query.supervisorId = supervisorId;
+    
+    const allocations = await Allocation.find(query)
       .populate('studentId')
       .populate('projectId')
       .populate('supervisorId')

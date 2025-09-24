@@ -40,15 +40,24 @@ export default function Allocation() {
   };
 
   const getStudentName = (studentId: Allocation['studentId']) => {
-    return studentId?.name || 'Unknown Student';
+    if (typeof studentId === 'object' && studentId?.name) {
+      return studentId.name;
+    }
+    return 'Unknown Student';
   };
 
   const getProjectTitle = (projectId: Allocation['projectId']) => {
-    return projectId?.title || 'Unknown Project';
+    if (typeof projectId === 'object' && projectId?.title) {
+      return projectId.title;
+    }
+    return 'Unknown Project';
   };
 
   const getSupervisorName = (supervisorId: Allocation['supervisorId']) => {
-    return supervisorId?.name || 'Unknown Supervisor'; // Fixed to use actual supervisor data
+    if (typeof supervisorId === 'object' && supervisorId?.name) {
+      return supervisorId.name;
+    }
+    return 'Unknown Supervisor';
   };
 
   return (

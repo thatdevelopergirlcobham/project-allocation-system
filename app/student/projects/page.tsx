@@ -233,7 +233,7 @@ export default function StudentProjects() {
                         </Link>
                         <Link
                           href={`/student/projects/${project._id}`}
-                          className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors text-sm"
+                          className="bg-gray-600 text-white px-3 sm:px-4 py-2 rounded-md hover:bg-gray-700 transition-colors text-xs sm:text-sm text-center"
                         >
                           View Details
                         </Link>

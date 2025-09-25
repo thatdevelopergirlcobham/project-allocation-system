@@ -1,45 +1,39 @@
-import mongoose from 'mongoose';
+// Project model for dummy data - no mongoose dependency
 
-const ProjectSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: [true, 'Please provide a project title'],
-    maxlength: [100, 'Title cannot be more than 100 characters'],
-  },
-  description: {
-    type: String,
-    required: [true, 'Please provide a project description'],
-    maxlength: [500, 'Description cannot be more than 500 characters'],
-  },
-  supervisorId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Supervisor',
-    required: [true, 'Please provide a supervisor'],
-  },
-  department: {
-    type: String,
-    required: [true, 'Please provide a department'],
-  },
-  maxStudents: {
-    type: Number,
-    required: [true, 'Please provide maximum number of students'],
-    min: [1, 'Must allow at least 1 student'],
-  },
-  currentStudents: {
-    type: Number,
-    default: 0,
-  },
-  requirements: {
-    type: String,
-    maxlength: [500, 'Requirements cannot be more than 500 characters'],
-  },
-  status: {
-    type: String,
-    enum: ['available', 'assigned', 'completed'],
-    default: 'available',
-  },
-}, {
-  timestamps: true,
-});
+// Mock Project constructor that works with our dummy data
+const ProjectModel = function(data) {
+  Object.assign(this, data);
+};
 
-export default mongoose.models.Project || mongoose.model('Project', ProjectSchema);
+// Static methods for database operations
+ProjectModel.findOne = async (query) => {
+  const { findOne } = await import('../lib/dummyData.js');
+  return findOne('projects', query);
+};
+
+ProjectModel.find = async (query = {}) => {
+  const { find } = await import('../lib/dummyData.js');
+  return find('projects', query);
+};
+
+ProjectModel.findById = async (id) => {
+  const { getById } = await import('../lib/dummyData.js');
+  return getById('projects', id);
+};
+
+ProjectModel.create = async (data) => {
+  const { create } = await import('../lib/dummyData.js');
+  return create('projects', data);
+};
+
+ProjectModel.findByIdAndUpdate = async (id, data) => {
+  const { updateById } = await import('../lib/dummyData.js');
+  return updateById('projects', id, data);
+};
+
+ProjectModel.findByIdAndDelete = async (id) => {
+  const { deleteById } = await import('../lib/dummyData.js');
+  return deleteById('projects', id);
+};
+
+export default ProjectModel;

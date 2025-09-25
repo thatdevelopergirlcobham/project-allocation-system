@@ -14,7 +14,6 @@ import {
   BookOpen, 
   Users, 
   FileText, 
-  Settings,
   GraduationCap
 } from 'lucide-react';
 import { useState } from 'react';
@@ -41,7 +40,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: 'Students', href: '/dashboard/students', icon: Users, adminOnly: true },
     { name: 'Supervisors', href: '/dashboard/supervisors', icon: Users, adminOnly: true },
     { name: 'Progress', href: '/dashboard/progress', icon: FileText },
-    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+    // { name: 'Settings', href: '/dashboard/settings', icon: Settings },
   ];
 
   return (

@@ -1,31 +1,39 @@
-import mongoose from 'mongoose';
+// Progress model for dummy data - no mongoose dependency
 
-const ProgressSchema = new mongoose.Schema({
-  studentId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Student',
-    required: [true, 'Please provide a student'],
-  },
-  projectId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Project',
-    required: [true, 'Please provide a project'],
-  },
-  report: {
-    type: String,
-    required: [true, 'Please provide a progress report'],
-    maxlength: [1000, 'Report cannot be more than 1000 characters'],
-  },
-  submissionDate: {
-    type: Date,
-    default: Date.now,
-  },
-  feedback: {
-    type: String,
-    maxlength: [500, 'Feedback cannot be more than 500 characters'],
-  },
-}, {
-  timestamps: true,
-});
+// Mock Progress constructor that works with our dummy data
+const ProgressModel = function(data) {
+  Object.assign(this, data);
+};
 
-export default mongoose.models.Progress || mongoose.model('Progress', ProgressSchema);
+// Static methods for database operations
+ProgressModel.findOne = async (query) => {
+  const { findOne } = await import('../lib/dummyData.js');
+  return findOne('progress', query);
+};
+
+ProgressModel.find = async (query = {}) => {
+  const { find } = await import('../lib/dummyData.js');
+  return find('progress', query);
+};
+
+ProgressModel.findById = async (id) => {
+  const { getById } = await import('../lib/dummyData.js');
+  return getById('progress', id);
+};
+
+ProgressModel.create = async (data) => {
+  const { create } = await import('../lib/dummyData.js');
+  return create('progress', data);
+};
+
+ProgressModel.findByIdAndUpdate = async (id, data) => {
+  const { updateById } = await import('../lib/dummyData.js');
+  return updateById('progress', id, data);
+};
+
+ProgressModel.findByIdAndDelete = async (id) => {
+  const { deleteById } = await import('../lib/dummyData.js');
+  return deleteById('progress', id);
+};
+
+export default ProgressModel;

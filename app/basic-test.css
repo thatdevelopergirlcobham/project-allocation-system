@@ -1,0 +1,15 @@
+/* Basic CSS test */
+.test-css {
+  background-color: red;
+  color: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.test-button {
+  background-color: blue;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.25rem;
+}

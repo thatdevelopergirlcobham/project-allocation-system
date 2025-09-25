@@ -1,17 +1,36 @@
-import { NextResponse } from 'next/server';
-import dbConnect from '../../../lib/dbConnect';
-import Student from '../../../models/Student';
-import User from '../../../models/User';
+import { NextRequest, NextResponse } from 'next/server';
+import { find, create, findOne } from '../../../lib/dummyData';
 
 export async function GET() {
   try {
-    await dbConnect();
+    const students = await find('students');
 
-    const students = await Student.find({})
-      .populate('assignedProject')
-      .sort({ createdAt: -1 });
+    // Manually populate assigned project data for each student
+    const populatedStudents = await Promise.all(students.map(async (student: any) => {
+      if (student.assignedProject) {
+        const { getById } = await import('../../../lib/dummyData');
+        const project = await getById('projects', student.assignedProject);
+        if (project) {
+          return {
+            ...student,
+            assignedProject: {
+              _id: project._id,
+              title: project.title,
+              description: project.description,
+              status: project.status
+            }
+          };
+        }
+      }
+      return student;
+    }));
 
-    return NextResponse.json(students);
+    // Sort by creation date
+    populatedStudents.sort((a: any, b: any) => {
+      return new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime();
+    });
+
+    return NextResponse.json(populatedStudents);
   } catch (error) {
     console.error('Error fetching students:', error);
     return NextResponse.json(
@@ -21,10 +40,8 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    await dbConnect();
-
     const body = await request.json();
     const { name, matricNumber, email, department, preference, password } = body;
 
@@ -36,7 +53,7 @@ export async function POST(request: Request) {
     }
 
     // Check if student already exists
-    const existingStudent = await Student.findOne({ $or: [{ matricNumber }, { email }] });
+    const existingStudent = await findOne('students', { $or: [{ matricNumber }, { email }] });
     if (existingStudent) {
       return NextResponse.json(
         { error: 'Student with this matriculation number or email already exists' },
@@ -45,7 +62,7 @@ export async function POST(request: Request) {
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await findOne('users', { email });
     if (existingUser) {
       return NextResponse.json(
         { error: 'User with this email already exists' },
@@ -57,22 +74,25 @@ export async function POST(request: Request) {
     const userData = {
       name,
       email,
-      password,
+      password: `hashed:${password}`,
       role: 'student',
       department,
-      matricNumber
+      matricNumber,
+      isActive: true
     };
 
-    const user = new User(userData);
-    const savedUser = await user.save();
+    const { create: createUser } = await import('../../../lib/dummyData');
+    const savedUser = await createUser('users', userData);
 
     // Create student record
-    const newStudent = await Student.create({
+    const newStudent = await create('students', {
       name,
       matricNumber,
       email,
       department,
-      preference
+      preference,
+      role: 'student',
+      isActive: true
     });
 
     return NextResponse.json({

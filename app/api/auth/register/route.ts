@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '../../../../lib/dbConnect';
-import User from '../../../../models/User';
-import mongoose from 'mongoose';
+import { create, findOne } from '../../../../lib/dummyData';
 
 export async function POST(request: NextRequest) {
   try {
-    await dbConnect();
-
     const body = await request.json();
     const {
       name,
@@ -27,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await findOne('users', { email });
     if (existingUser) {
       return NextResponse.json(
         { error: 'User with this email already exists' },
@@ -39,8 +35,9 @@ export async function POST(request: NextRequest) {
     const userData: Record<string, unknown> = {
       name,
       email,
-      password,
-      role
+      password: `hashed:${password}`,
+      role,
+      isActive: true
     };
 
     // Add role-specific fields only if they exist and are not empty
@@ -87,20 +84,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new user
-    const user = new User(userData);
-    const savedUser = await user.save();
+    const savedUser = await create('users', userData) as any;
 
     // Return user data without password
-    let userResponse;
-    
-    // Handle both mongoose models and our mock models
-    if (typeof savedUser.toObject === 'function') {
-      userResponse = savedUser.toObject();
-    } else {
-      // For mock database
-      userResponse = { ...savedUser };
-    }
-    
+    const userResponse = { ...savedUser };
     delete userResponse.password;
 
     return NextResponse.json({
@@ -110,45 +97,15 @@ export async function POST(request: NextRequest) {
 
   } catch (error: unknown) {
     console.error('Registration error:', error);
-    
-    // Provide more detailed error messages
-    if (error instanceof mongoose.Error.ValidationError) {
-      // Mongoose validation error
-      const validationErrors = Object.values(error.errors).map((err) => err.message);
-      return NextResponse.json(
-        { error: 'Validation error', details: validationErrors },
-        { status: 400 }
-      );
-    } else if (error instanceof Error && 'code' in error && error.code === 11000) {
-      // Duplicate key error (MongoDB)
-      // Cast to unknown first to avoid TypeScript error
-      const mongoError = error as unknown as { keyValue: Record<string, unknown> };
-      
-      // Check if keyValue exists before accessing it
-      if (mongoError && 'keyValue' in mongoError) {
-        const field = Object.keys(mongoError.keyValue)[0];
-        return NextResponse.json(
-          { error: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists` },
-          { status: 409 }
-        );
-      }
-      
-      // Fallback for when keyValue is not available
-      return NextResponse.json(
-        { error: 'A duplicate entry already exists' },
-        { status: 409 }
-      );
-    } else {
-      // Other errors
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      return NextResponse.json(
-        { 
-          error: 'Internal server error', 
-          details: errorMessage,
-          mockDb: process.env.USE_MOCK_DB === 'true' ? 'Using mock database' : 'Using real database'
-        },
-        { status: 500 }
-      );
-    }
+
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        details: errorMessage,
+        usingDummyDb: true
+      },
+      { status: 500 }
+    );
   }
 }

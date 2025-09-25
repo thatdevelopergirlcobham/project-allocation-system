@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '../../../../lib/dbConnect';
-import User from '../../../../models/User';
+import { findOne, comparePassword } from '../../../../lib/dummyData';
 
 export async function POST(request: NextRequest) {
   try {
-    await dbConnect();
-
     const body = await request.json();
     const { email, password, role } = body;
 
@@ -18,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find user by email and role
-    const user = await User.findOne({ email, role });
+    const user = await findOne('users', { email, role }) as any;
     if (!user) {
       return NextResponse.json(
         { error: 'Invalid credentials' },
@@ -35,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Compare password
-    const isPasswordValid = await user.comparePassword(password);
+    const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) {
       return NextResponse.json(
         { error: 'Invalid credentials' },
@@ -44,16 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Return user data without password
-    let userResponse;
-    
-    // Handle both mongoose models and our mock models
-    if (typeof user.toObject === 'function') {
-      userResponse = user.toObject();
-    } else {
-      // For mock database
-      userResponse = { ...user };
-    }
-    
+    const userResponse = { ...user };
     delete userResponse.password;
 
     return NextResponse.json({
@@ -63,15 +51,14 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Login error:', error);
-    
-    // Create a more helpful error message
+
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    
+
     return NextResponse.json(
-      { 
-        error: 'Internal server error', 
+      {
+        error: 'Internal server error',
         details: errorMessage,
-        mockDb: process.env.USE_MOCK_DB === 'true' ? 'Using mock database' : 'Using real database'
+        usingDummyDb: true
       },
       { status: 500 }
     );

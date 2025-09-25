@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useApp } from '../../../context/AppContext';
@@ -19,16 +19,7 @@ export default function StudentSupervisor() {
   } | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!state.user || state.user.role !== 'student') {
-      router.push('/login');
-      return;
-    }
-
-    fetchSupervisor();
-  }, [state.user, router, fetchSupervisor]);
-
-  const fetchSupervisor = async () => {
+  const fetchSupervisor = useCallback(async () => {
     setLoading(true);
     try {
       // First get the student's allocation to find their supervisor
@@ -52,7 +43,16 @@ export default function StudentSupervisor() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [state.user]);
+
+  useEffect(() => {
+    if (!state.user || state.user.role !== 'student') {
+      router.push('/login');
+      return;
+    }
+
+    fetchSupervisor();
+  }, [state.user, router, fetchSupervisor]);
 
   if (!state.user || state.user.role !== 'student') {
     return (

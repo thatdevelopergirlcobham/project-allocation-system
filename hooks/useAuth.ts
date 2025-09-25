@@ -37,14 +37,16 @@ export function useAuth(): UseAuthReturn {
 
   // Check for user in localStorage on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser && !state.user) {
-      try {
-        const parsedUser = JSON.parse(storedUser) as User;
-        dispatch({ type: 'SET_USER', payload: parsedUser });
-      } catch (err) {
-        console.error('Error parsing stored user:', err);
-        localStorage.removeItem('user');
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser && !state.user) {
+        try {
+          const parsedUser = JSON.parse(storedUser) as User;
+          dispatch({ type: 'SET_USER', payload: parsedUser });
+        } catch (err) {
+          console.error('Error parsing stored user:', err);
+          localStorage.removeItem('user');
+        }
       }
     }
   }, [dispatch, state.user]);
@@ -122,7 +124,9 @@ export function useAuth(): UseAuthReturn {
       
       // Store user in context and localStorage
       dispatch({ type: 'SET_USER', payload: authData.user });
-      localStorage.setItem('user', JSON.stringify(authData.user));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user', JSON.stringify(authData.user));
+      }
       
       setLoading(false);
       return { success: true, message: 'Login successful' };
@@ -138,7 +142,9 @@ export function useAuth(): UseAuthReturn {
   const logout = (): void => {
     // Remove user from context and localStorage
     dispatch({ type: 'LOGOUT' });
-    localStorage.removeItem('user');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('user');
+    }
     router.push('/login');
   };
 

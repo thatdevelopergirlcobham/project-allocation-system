@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '../../../../lib/dbConnect';
 import Progress from '../../../../models/Progress';
+import Student from '../../../../models/Student';
+import Project from '../../../../models/Project';
 
 export async function GET(
   request: NextRequest,
@@ -9,9 +11,7 @@ export async function GET(
   try {
     await dbConnect();
 
-    const progress = await Progress.findById(params.id)
-      .populate('studentId')
-      .populate('projectId');
+    const progress = await Progress.findById(params.id);
 
     if (!progress) {
       return NextResponse.json(
@@ -20,7 +20,17 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(progress);
+    // Manually populate related data
+    const student = await Student.findById((progress as any).studentId);
+    const project = await Project.findById((progress as any).projectId);
+
+    const populatedProgress = {
+      ...progress,
+      studentId: student,
+      projectId: project
+    };
+
+    return NextResponse.json(populatedProgress);
   } catch (error) {
     console.error('Error fetching progress report:', error);
     return NextResponse.json(
@@ -49,8 +59,7 @@ export async function PATCH(
 
     const updatedProgress = await Progress.findByIdAndUpdate(
       params.id,
-      { feedback },
-      { new: true }
+      { feedback }
     );
 
     if (!updatedProgress) {

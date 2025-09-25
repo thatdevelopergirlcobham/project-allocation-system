@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '../../../../lib/dbConnect';
 import Student from '../../../../models/Student';
+import Project from '../../../../models/Project';
 
 export async function GET(
   request: NextRequest,
@@ -9,7 +10,7 @@ export async function GET(
   try {
     await dbConnect();
 
-    const student = await Student.findById(params.id).populate('assignedProject');
+    const student = await Student.findById(params.id);
 
     if (!student) {
       return NextResponse.json(
@@ -18,7 +19,16 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(student);
+    // Manually populate assigned project
+    const assignedProject = (student as any).assignedProject ? 
+      await Project.findById((student as any).assignedProject) : null;
+
+    const populatedStudent = {
+      ...student,
+      assignedProject
+    };
+
+    return NextResponse.json(populatedStudent);
   } catch (error) {
     console.error('Error fetching student:', error);
     return NextResponse.json(
@@ -40,9 +50,8 @@ export async function PUT(
 
     const updatedStudent = await Student.findByIdAndUpdate(
       params.id,
-      { name, matricNumber, email, department, preference },
-      { new: true, runValidators: true }
-    ).populate('assignedProject');
+      { name, matricNumber, email, department, preference }
+    );
 
     if (!updatedStudent) {
       return NextResponse.json(
@@ -51,7 +60,16 @@ export async function PUT(
       );
     }
 
-    return NextResponse.json(updatedStudent);
+    // Manually populate assigned project
+    const assignedProject = (updatedStudent as any).assignedProject ? 
+      await Project.findById((updatedStudent as any).assignedProject) : null;
+
+    const populatedStudent = {
+      ...updatedStudent,
+      assignedProject
+    };
+
+    return NextResponse.json(populatedStudent);
   } catch (error) {
     console.error('Error updating student:', error);
     return NextResponse.json(

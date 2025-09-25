@@ -45,8 +45,7 @@ export async function PUT(
         email,
         department,
         specialization
-      },
-      { new: true }
+      }
     );
 
     if (!updatedSupervisor) {

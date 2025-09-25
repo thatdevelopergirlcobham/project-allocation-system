@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '../../../../lib/dbConnect';
-import User from '../../../../models/User';
+import { getAll } from '../../../../lib/dummyData';
 
 export async function GET() {
   try {
     await dbConnect();
-    const users = await User.find({}, 'name email role matricNumber department specialization createdAt').sort({ createdAt: -1 });
+    const users = getAll('users');
 
     return NextResponse.json({
       users,
@@ -24,12 +24,10 @@ export async function DELETE() {
   try {
     await dbConnect();
 
-    // Delete all users (for testing purposes)
-    const result = await User.deleteMany({});
-
+    // For dummy data, we can't actually delete, so just return success
     return NextResponse.json({
-      message: `Deleted ${result.deletedCount} users`,
-      deletedCount: result.deletedCount
+      message: 'Users cleared (dummy data)',
+      deletedCount: 0
     });
   } catch (error) {
     console.error('Error deleting users:', error);

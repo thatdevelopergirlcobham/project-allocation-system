@@ -3,7 +3,7 @@ import { find, create, getById } from '../../../lib/dummyData';
 
 export async function GET() {
   try {
-    const progressReports = await find('progress');
+    const progressReports = await find('progress', {});
 
     // Manually populate related data for each progress report
     const populatedProgress = await Promise.all(progressReports.map(async (progress: any) => {

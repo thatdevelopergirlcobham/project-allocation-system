@@ -64,11 +64,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { studentId, projectId } = body;
+    const { studentId, projectId, supervisorId } = body;
 
-    if (!studentId || !projectId) {
+    if (!studentId || !projectId || !supervisorId) {
       return NextResponse.json(
-        { error: 'Missing required fields: studentId and projectId' },
+        { error: 'Missing required fields: studentId, projectId, and supervisorId' },
         { status: 400 }
       );
     }

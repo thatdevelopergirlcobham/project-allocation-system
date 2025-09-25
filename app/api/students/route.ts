@@ -3,13 +3,13 @@ import { find, create, findOne } from '../../../lib/dummyData';
 
 export async function GET() {
   try {
-    const students = await find('students');
+    const students = await find('students', {});
 
     // Manually populate assigned project data for each student
     const populatedStudents = await Promise.all(students.map(async (student: any) => {
       if (student.assignedProject) {
         const { getById } = await import('../../../lib/dummyData');
-        const project = await getById('projects', student.assignedProject);
+        const project = await getById('projects', student.assignedProject) as any;
         if (project) {
           return {
             ...student,
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     };
 
     const { create: createUser } = await import('../../../lib/dummyData');
-    const savedUser = await createUser('users', userData);
+    const savedUser: any = await createUser('users', userData as any);
 
     // Create student record
     const newStudent = await create('students', {
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
       preference,
       role: 'student',
       isActive: true
-    });
+    } as any);
 
     return NextResponse.json({
       student: newStudent,

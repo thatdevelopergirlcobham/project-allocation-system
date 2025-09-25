@@ -9,6 +9,7 @@ export interface User {
   matricNumber?: string;
   specialization?: string;
   isActive: boolean;
+  isAdmin?: boolean;
   createdAt: string;
   updatedAt: string;
 }

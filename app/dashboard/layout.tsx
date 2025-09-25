@@ -106,14 +106,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       role="menu"
                       aria-orientation="vertical"
                       aria-labelledby="user-menu-button"
-                      tabIndex="-1"
+                      tabIndex={-1}
                     >
                       <Link href="/dashboard/profile">
                         <a
                           className="block px-4 py-2 text-sm text-gray-700"
                           role="menuitem"
                           id="user-menu-item-0"
-                          tabIndex="-1"
+                          tabIndex={-1}
                         >
                           Your Profile
                         </a>
@@ -123,7 +123,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                           className="block px-4 py-2 text-sm text-gray-700"
                           role="menuitem"
                           id="user-menu-item-1"
-                          tabIndex="-1"
+                          tabIndex={-1}
                           onClick={logout}
                         >
                           Sign out
@@ -201,7 +201,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                           ${item.adminOnly && !user?.isAdmin ? 'hidden' : ''}
                           border-transparent flex items-center whitespace-nowrap py-4 px-1 border-b-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300
                         `}
-                        aria-current={item.href === window.location.pathname ? 'page' : undefined}
+                        aria-current={typeof window !== 'undefined' && item.href === window.location.pathname ? 'page' : undefined}
+                        tabIndex={-1}
                       >
                         <item.icon className="h-5 w-5 mr-3" aria-hidden="true" />
                         <span className="text-sm font-medium">{item.name}</span>

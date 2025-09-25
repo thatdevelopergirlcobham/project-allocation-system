@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '../../../../lib/dbConnect';
-import User from '../../../../models/User';
+import { getAll } from '../../../../lib/dummyData';
 
 export async function GET() {
   try {
     await dbConnect();
-    const userCount = await User.countDocuments();
+    const users = getAll('users');
+    const userCount = users.length;
 
     return NextResponse.json(
       { userCount },

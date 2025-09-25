@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '../../../../lib/dbConnect';
 import Project from '../../../../models/Project';
+import Supervisor from '../../../../models/Supervisor';
 
 export async function GET(
   request: NextRequest,
@@ -9,8 +10,7 @@ export async function GET(
   try {
     await dbConnect();
 
-    const project = await Project.findById(params.id)
-      .populate('supervisorId', 'name email');
+    const project = await Project.findById(params.id);
 
     if (!project) {
       return NextResponse.json(
@@ -19,7 +19,15 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(project);
+    // Manually populate supervisor data
+    const supervisor = await Supervisor.findById((project as any).supervisorId);
+
+    const populatedProject = {
+      ...project,
+      supervisorId: supervisor
+    };
+
+    return NextResponse.json(populatedProject);
   } catch (error) {
     console.error('Error fetching project:', error);
     return NextResponse.json(
@@ -47,9 +55,8 @@ export async function PUT(
         department,
         maxStudents,
         requirements
-      },
-      { new: true }
-    ).populate('supervisorId', 'name email');
+      }
+    );
 
     if (!updatedProject) {
       return NextResponse.json(
@@ -58,7 +65,15 @@ export async function PUT(
       );
     }
 
-    return NextResponse.json(updatedProject);
+    // Manually populate supervisor data
+    const supervisor = await Supervisor.findById((updatedProject as any).supervisorId);
+
+    const populatedProject = {
+      ...updatedProject,
+      supervisorId: supervisor
+    };
+
+    return NextResponse.json(populatedProject);
   } catch (error) {
     console.error('Error updating project:', error);
     return NextResponse.json(

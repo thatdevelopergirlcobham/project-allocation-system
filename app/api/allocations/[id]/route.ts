@@ -3,6 +3,7 @@ import dbConnect from '../../../../lib/dbConnect';
 import Allocation from '../../../../models/Allocation';
 import Project from '../../../../models/Project';
 import Student from '../../../../models/Student';
+import Supervisor from '../../../../models/Supervisor';
 
 export async function GET(
   request: NextRequest,
@@ -11,10 +12,7 @@ export async function GET(
   try {
     await dbConnect();
 
-    const allocation = await Allocation.findById(params.id)
-      .populate('studentId')
-      .populate('projectId')
-      .populate('supervisorId');
+    const allocation = await Allocation.findById(params.id);
 
     if (!allocation) {
       return NextResponse.json(
@@ -23,7 +21,19 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(allocation);
+    // Manually populate related data
+    const student = await Student.findById((allocation as any).studentId);
+    const project = await Project.findById((allocation as any).projectId);
+    const supervisor = await Supervisor.findById((allocation as any).supervisorId);
+
+    const populatedAllocation = {
+      ...allocation,
+      studentId: student,
+      projectId: project,
+      supervisorId: supervisor
+    };
+
+    return NextResponse.json(populatedAllocation);
   } catch (error) {
     console.error('Error fetching allocation:', error);
     return NextResponse.json(
@@ -45,12 +55,8 @@ export async function PUT(
 
     const updatedAllocation = await Allocation.findByIdAndUpdate(
       params.id,
-      { studentId, projectId, supervisorId },
-      { new: true }
-    )
-      .populate('studentId')
-      .populate('projectId')
-      .populate('supervisorId');
+      { studentId, projectId, supervisorId }
+    );
 
     if (!updatedAllocation) {
       return NextResponse.json(
@@ -59,7 +65,19 @@ export async function PUT(
       );
     }
 
-    return NextResponse.json(updatedAllocation);
+    // Manually populate related data
+    const student = await Student.findById((updatedAllocation as any).studentId);
+    const project = await Project.findById((updatedAllocation as any).projectId);
+    const supervisor = await Supervisor.findById((updatedAllocation as any).supervisorId);
+
+    const populatedAllocation = {
+      ...updatedAllocation,
+      studentId: student,
+      projectId: project,
+      supervisorId: supervisor
+    };
+
+    return NextResponse.json(populatedAllocation);
   } catch (error) {
     console.error('Error updating allocation:', error);
     return NextResponse.json(
@@ -87,17 +105,17 @@ export async function DELETE(
     }
 
     // Update the project's currentStudents count
-    if (allocation.projectId) {
+    if ((allocation as any).projectId) {
       await Project.findByIdAndUpdate(
-        allocation.projectId,
+        (allocation as any).projectId,
         { $inc: { currentStudents: -1 } }
       );
     }
 
     // Update the student's assignedProject
-    if (allocation.studentId) {
+    if ((allocation as any).studentId) {
       await Student.findByIdAndUpdate(
-        allocation.studentId,
+        (allocation as any).studentId,
         { $unset: { assignedProject: "" } }
       );
     }

@@ -26,8 +26,8 @@ export async function GET(request: NextRequest) {
             ...project,
             supervisorId: {
               _id: supervisor._id,
-              name: supervisor.name,
-              email: supervisor.email
+              name: (supervisor as any).name,
+              email: (supervisor as any).email
             }
           };
         }
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       supervisorId,
       status: 'available',
       currentStudents: 0
-    });
+    } as any);
 
     return NextResponse.json(project, { status: 201 });
   } catch (error) {

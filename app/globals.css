@@ -109,11 +109,11 @@
   }
 
   .btn-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm;
+    @apply bg-primary text-primary-foreground hover:bg-primary hover:opacity-90 shadow-sm;
   }
 
   .btn-secondary {
-    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary hover:opacity-80;
   }
 
   .btn-ghost {
@@ -149,15 +149,15 @@
   }
 
   .badge-default {
-    @apply border-transparent bg-primary text-primary-foreground hover:bg-primary/80;
+    @apply border-transparent bg-primary text-primary-foreground hover:bg-primary hover:opacity-80;
   }
 
   .badge-secondary {
-    @apply border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80;
+    @apply border-transparent bg-secondary text-secondary-foreground hover:bg-secondary hover:opacity-80;
   }
 
   .badge-destructive {
-    @apply border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80;
+    @apply border-transparent bg-destructive text-destructive-foreground hover:bg-destructive hover:opacity-80;
   }
 
   .badge-outline {

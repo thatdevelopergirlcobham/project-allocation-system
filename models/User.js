@@ -1,10 +1,5 @@
 // User model for dummy data - no mongoose dependency
 
-<<<<<<< HEAD
-// Mock User constructor that works with our dummy data
-const UserModel = function(data) {
-  Object.assign(this, data);
-=======
 const UserSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -99,7 +94,6 @@ UserSchema.methods.comparePassword = async function(candidatePassword) {
   
   // Real comparison for production
   return await bcrypt.compare(candidatePassword, this.password);
->>>>>>> 31c655f9067ff79ce2395470b38dba5f921a4c08
 };
 
 // Static methods for database operations

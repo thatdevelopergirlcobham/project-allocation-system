@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { find, create, getById, findOne } from '../../../../lib/dummyData';
+import { find, create, getById, findOne } from '../../../lib/dummyData';
 
 export async function GET(request: NextRequest) {
   try {

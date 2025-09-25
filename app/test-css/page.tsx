@@ -1,4 +1,5 @@
-import '../basic-test.css';
+// CSS is imported via globals.css or can be added as style tag if needed
+// import '../basic-test.css';
 
 export default function TestPage() {
   return (

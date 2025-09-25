@@ -18,15 +18,12 @@
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/typography": "^0.5.19",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-<<<<<<< HEAD
-    "autoprefixer": "^10.4.16",
-=======
     "autoprefixer": "^10.4.21",
->>>>>>> 31c655f9067ff79ce2395470b38dba5f921a4c08
     "eslint": "^8",
     "eslint-config-next": "14.2.32",
     "postcss": "^8.5.6",

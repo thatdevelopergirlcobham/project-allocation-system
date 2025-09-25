@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { find, create, getById } from '../../../lib/dummyData';
 
@@ -72,36 +73,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-<<<<<<< HEAD
-    const newAllocation = await create('allocations', {
+    const newAllocation = create('allocations', {
       studentId,
       projectId,
       supervisorId
     } as any);
-=======
-    // Get the project to find the supervisor
-    const Project = (await import('../../../models/Project')).default;
-    const project = await Project.findById(projectId);
-    if (!project) {
-      return NextResponse.json(
-        { error: 'Project not found' },
-        { status: 404 }
-      );
-    }
-
-    const newAllocation = await Allocation.create({
-      studentId,
-      projectId,
-      supervisorId: project.supervisorId
-    });
->>>>>>> 31c655f9067ff79ce2395470b38dba5f921a4c08
-
-    // Update project status to assigned
-    await Project.findByIdAndUpdate(projectId, { status: 'assigned' });
-
-    // Update student's assigned project
-    const Student = (await import('../../../models/Student')).default;
-    await Student.findByIdAndUpdate(studentId, { assignedProject: projectId });
 
     return NextResponse.json(newAllocation, { status: 201 });
   } catch (error) {

@@ -56,17 +56,12 @@ export default function Home() {
             >
               Get Started
             </Link>
-            {/* <Link
+            <Link
               href="/register"
               className="border border-indigo-600 text-indigo-600 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-indigo-50 transition-colors"
             >
-<<<<<<< HEAD
-              Create New Account
-            </Link> */}
-=======
               Create Account
             </Link>
->>>>>>> 31c655f9067ff79ce2395470b38dba5f921a4c08
           </div>
         </div>
       </div>

@@ -101,8 +101,11 @@ export default function SupervisorProgress() {
     fetchSupervisorData();
   }, [state.user, router, fetchSupervisorData]);
 
+<<<<<<< HEAD
   // Remove duplicate function
 
+=======
+>>>>>>> 31c655f9067ff79ce2395470b38dba5f921a4c08
 
   if (!state.user || state.user.role !== 'supervisor') {
     return (
@@ -162,11 +165,19 @@ export default function SupervisorProgress() {
                 <div key={report._id} className="bg-white shadow rounded-lg p-4 sm:p-6">
                   <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-4 space-y-3 md:space-y-0">
                     <div>
+<<<<<<< HEAD
                       <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                         Student: {(report.studentId as Student)?.name || 'Unknown Student'}
                       </h3>
                       <p className="text-sm sm:text-base text-gray-600">
                         Project: {(report.projectId as Project)?.title || 'Unknown Project'}
+=======
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        Student: {typeof report.studentId === 'object' && report.studentId?.name ? report.studentId.name : 'Unknown Student'}
+                      </h3>
+                      <p className="text-gray-600">
+                        Project: {typeof report.projectId === 'object' && report.projectId?.title ? report.projectId.title : 'Unknown Project'}
+>>>>>>> 31c655f9067ff79ce2395470b38dba5f921a4c08
                       </p>
                       <p className="text-xs sm:text-sm text-gray-500">
                         Submitted: {new Date(report.submissionDate).toLocaleDateString()}

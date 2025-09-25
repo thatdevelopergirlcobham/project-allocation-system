@@ -31,6 +31,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check for matric number conflicts only if matric number is provided and not empty
+    if (matricNumber && matricNumber.trim() !== '') {
+      const existingMatricUser = await User.findOne({ matricNumber: matricNumber.trim() });
+      if (existingMatricUser) {
+        return NextResponse.json(
+          { error: 'Matriculation number already exists' },
+          { status: 409 }
+        );
+      }
+    }
+
     // Create user object based on role
     const userData: Record<string, unknown> = {
       name,
@@ -59,19 +70,18 @@ export async function POST(request: NextRequest) {
         }
         userData.department = department;
         userData.specialization = specialization;
-        // matricNumber is not required for supervisors
-        if (matricNumber && matricNumber.trim()) userData.matricNumber = matricNumber;
+        // Explicitly exclude matricNumber for supervisors to avoid any issues
         break;
 
       case 'student':
-        if (!department || !matricNumber) {
+        if (!department || !matricNumber || matricNumber.trim() === '') {
           return NextResponse.json(
             { error: 'Department and matriculation number are required for students' },
             { status: 400 }
           );
         }
         userData.department = department;
-        userData.matricNumber = matricNumber;
+        userData.matricNumber = matricNumber.trim();
         // specialization is not required for students
         if (specialization && specialization.trim()) userData.specialization = specialization;
         break;
@@ -87,7 +97,20 @@ export async function POST(request: NextRequest) {
     const savedUser = await create('users', userData) as any;
 
     // Return user data without password
+<<<<<<< HEAD
     const userResponse = { ...savedUser };
+=======
+    let userResponse;
+
+    // Handle both mongoose models and our mock models
+    if (typeof savedUser.toObject === 'function') {
+      userResponse = savedUser.toObject();
+    } else {
+      // For mock database
+      userResponse = { ...savedUser };
+    }
+
+>>>>>>> 31c655f9067ff79ce2395470b38dba5f921a4c08
     delete userResponse.password;
 
     return NextResponse.json({
@@ -98,6 +121,7 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     console.error('Registration error:', error);
 
+<<<<<<< HEAD
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(
       {
@@ -107,5 +131,46 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
+=======
+    // Provide more detailed error messages
+    if (error instanceof mongoose.Error.ValidationError) {
+      // Mongoose validation error
+      const validationErrors = Object.values(error.errors).map((err) => err.message);
+      return NextResponse.json(
+        { error: 'Validation error', details: validationErrors },
+        { status: 400 }
+      );
+    } else if (error instanceof Error && 'code' in error && error.code === 11000) {
+      // Duplicate key error (MongoDB)
+      // Cast to unknown first to avoid TypeScript error
+      const mongoError = error as unknown as { keyValue: Record<string, unknown> };
+
+      // Check if keyValue exists before accessing it
+      if (mongoError && 'keyValue' in mongoError) {
+        const field = Object.keys(mongoError.keyValue)[0];
+        return NextResponse.json(
+          { error: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists` },
+          { status: 409 }
+        );
+      }
+
+      // Fallback for when keyValue is not available
+      return NextResponse.json(
+        { error: 'A duplicate entry already exists' },
+        { status: 409 }
+      );
+    } else {
+      // Other errors
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      return NextResponse.json(
+        {
+          error: 'Internal server error',
+          details: errorMessage,
+          mockDb: process.env.USE_MOCK_DB === 'true' ? 'Using mock database' : 'Using real database'
+        },
+        { status: 500 }
+      );
+    }
+>>>>>>> 31c655f9067ff79ce2395470b38dba5f921a4c08
   }
 }

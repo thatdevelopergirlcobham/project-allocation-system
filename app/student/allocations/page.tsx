@@ -163,16 +163,10 @@ export default function StudentAllocations() {
                       </div>
                       <div className="flex space-x-3">
                         <Link
-                          href="/progress"
+                          href="/student/progress"
                           className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors text-sm"
                         >
                           Submit Progress Report
-                        </Link>
-                        <Link
-                          href={`/student/projects/${allocation.projectId?._id}`}
-                          className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors text-sm"
-                        >
-                          View Project Details
                         </Link>
                       </div>
                     </div>

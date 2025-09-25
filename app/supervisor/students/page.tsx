@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useApp } from '../../../context/AppContext';
-import { GraduationCap, ArrowLeft, Users, Plus } from 'lucide-react';
+import { GraduationCap, ArrowLeft, Users } from 'lucide-react';
 
 export default function SupervisorStudents() {
   const { state } = useApp();

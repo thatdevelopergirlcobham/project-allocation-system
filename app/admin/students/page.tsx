@@ -4,14 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useApp } from '../../../context/AppContext';
-import { useToast } from '../../../components/Toast';
 import type { Student } from '../../../types';
 import { GraduationCap, ArrowLeft, Users, Plus } from 'lucide-react';
 
 export default function AdminStudents() {
   const { state } = useApp();
   const router = useRouter();
-  const { addToast } = useToast();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,7 +20,7 @@ export default function AdminStudents() {
     }
 
     fetchStudents();
-  }, [state.user, router, addToast]);
+  }, [state.user, router]);
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -52,9 +50,13 @@ export default function AdminStudents() {
 
       if (response.ok) {
         fetchStudents(); // Refresh the list
+        alert('Student deleted successfully');
+      } else {
+        alert('Error deleting student');
       }
     } catch (error) {
       console.error('Error deleting student:', error);
+      alert('Error deleting student');
     }
   };
 

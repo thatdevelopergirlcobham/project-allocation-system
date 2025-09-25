@@ -69,25 +69,39 @@ export default function Register() {
     }
 
     // Prepare data to send to API based on role
-    const registerData = {
+    const registerData: {
+      name: string;
+      email: string;
+      password: string;
+      role: UserRole;
+      department?: string;
+      matricNumber?: string;
+      specialization?: string;
+    } = {
       name: formData.name,
       email: formData.email,
       password: formData.password,
       role: formData.role,
-      department: formData.department,
-      matricNumber: formData.matricNumber,
-      specialization: formData.specialization
     };
 
-    // Add role-specific fields only if required
+    // Add role-specific fields only when needed
     if (formData.role === 'supervisor') {
       registerData.department = formData.department;
       registerData.specialization = formData.specialization;
+      // Don't include matricNumber for supervisors
     } else if (formData.role === 'student') {
       registerData.department = formData.department;
       registerData.matricNumber = formData.matricNumber;
+      // specialization is optional for students
+      if (formData.specialization) {
+        registerData.specialization = formData.specialization;
+      }
+    } else if (formData.role === 'admin') {
+      // Admins don't need additional fields, but include them if provided
+      // if (formData.department) registerData.department = formData.department;
+      // if (formData.specialization) registerData.specialization = formData.specialization;
+      // if (formData.matricNumber) registerData.matricNumber = formData.matricNumber;
     }
-    // Admin doesn't need additional fields
 
     const result = await signup(registerData);
 

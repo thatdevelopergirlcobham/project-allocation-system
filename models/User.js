@@ -35,6 +35,10 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: false, // Make it optional, we'll validate in the API
     sparse: true, // Allow null values but enforce uniqueness when present
+    set: function(value) {
+      // Convert empty strings to null to avoid sparse index conflicts
+      return value === '' ? null : value;
+    }
   },
   specialization: {
     type: String,

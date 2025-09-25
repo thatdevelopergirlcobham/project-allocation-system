@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useAuth } from '../../hooks/useAuth';
-import { Users, BookOpen, TrendingUp, Calendar, CheckCircle, AlertCircle } from 'lucide-react';
+import { Users, BookOpen, TrendingUp } from 'lucide-react';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -24,11 +24,11 @@ export default function Dashboard() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Submit Progress</h3>
                 <p className="text-gray-600">Update your project progress</p>
               </Link>
-              <div className="bg-white p-6 rounded-lg shadow-md">
+              <Link href="/student/supervisor" className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                 <Users className="h-8 w-8 text-indigo-600 mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">My Supervisor</h3>
                 <p className="text-gray-600">Contact information</p>
-              </div>
+              </Link>
             </div>
           </div>
         );
@@ -75,6 +75,11 @@ export default function Dashboard() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">All Projects</h3>
                 <p className="text-gray-600">View all projects</p>
               </Link>
+              <Link href="/admin/assign" className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                <TrendingUp className="h-8 w-8 text-indigo-600 mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Assign Students</h3>
+                <p className="text-gray-600">Assign students to projects</p>
+              </Link>
               <Link href="/admin/allocations" className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                 <TrendingUp className="h-8 w-8 text-indigo-600 mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Allocation Status</h3>
@@ -88,99 +93,32 @@ export default function Dashboard() {
     }
   };
 
-  // Dashboard summary cards
-  const summaryCards = [
-    {
-      title: 'Active Projects',
-      value: '12',
-      icon: BookOpen,
-      color: 'bg-blue-500'
-    },
-    {
-      title: 'Students',
-      value: '48',
-      icon: Users,
-      color: 'bg-green-500'
-    },
-    {
-      title: 'Upcoming Deadlines',
-      value: '3',
-      icon: Calendar,
-      color: 'bg-yellow-500'
-    },
-    {
-      title: 'Completion Rate',
-      value: '78%',
-      icon: CheckCircle,
-      color: 'bg-purple-500'
-    },
-  ];
-
   return (
-    <>
-      {/* Welcome Banner */}
-      <div className="bg-white rounded-xl shadow-md p-6 mb-6 border-l-4 border-indigo-500">
-        <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user?.name}!</h1>
-        <p className="text-gray-600 mt-1">Here's an overview of your project allocation system.</p>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {summaryCards.map((card, index) => (
-          <div key={index} className="bg-white rounded-xl shadow-md overflow-hidden">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className={`rounded-full p-3 ${card.color}`}>
-                  <card.icon className="h-6 w-6 text-white" />
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-lg font-medium text-gray-700">{card.title}</h3>
-                  <p className="text-2xl font-bold text-gray-900">{card.value}</p>
-                </div>
-              </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Navigation */}
+      <nav className="bg-white shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <span className="text-xl font-bold text-gray-900">
+                Project Allocation System
+              </span>
             </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Main Dashboard Content */}
-      <div className="bg-white rounded-xl shadow-md p-6">
-        {getDashboardContent()}
-      </div>
-
-      {/* Recent Activity */}
-      <div className="mt-8 bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h2>
-        <div className="space-y-4">
-          <div className="flex items-start">
-            <div className="bg-green-100 p-2 rounded-full">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">Project allocation completed</p>
-              <p className="text-xs text-gray-500">2 hours ago</p>
-            </div>
-          </div>
-          <div className="flex items-start">
-            <div className="bg-blue-100 p-2 rounded-full">
-              <Users className="h-5 w-5 text-blue-600" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">New student registered</p>
-              <p className="text-xs text-gray-500">Yesterday</p>
-            </div>
-          </div>
-          <div className="flex items-start">
-            <div className="bg-yellow-100 p-2 rounded-full">
-              <AlertCircle className="h-5 w-5 text-yellow-600" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">Deadline approaching for progress report</p>
-              <p className="text-xs text-gray-500">2 days ago</p>
+            <div className="flex items-center space-x-4">
+              <span className="text-gray-700">Welcome, {user?.name}</span>
             </div>
           </div>
         </div>
+      </nav>
+
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          {/* Main Dashboard Content */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            {getDashboardContent()}
+          </div>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
